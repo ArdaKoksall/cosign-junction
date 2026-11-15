@@ -31,3 +31,7 @@ For the workspace connected to Valio, authorized participants supply the officia
 See the workspace and MCP architecture, supplier integration and test commands. The connected development workspace also includes Nemotron extraction from kitchen notes and photos. [System design](docs/architecture/system-design.md) · [Valio integration](docs/architecture/valio-integration.md) · [Validation](validation/README.md#credential-free-verification) · [Nemotron intake evaluation](validation/model-eval/README.md)
 
 Write project documentation, code identifiers and comments in English. Keep interface copy available in English and Finnish.
+
+## License
+
+The MIT license covers Cosign’s original source code and documentation. Third-party code, fonts, photographs, trademarks, and organizer materials are outside this grant and retain their respective terms. [MIT license](LICENSE.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
