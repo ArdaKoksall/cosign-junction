@@ -1,0 +1,12 @@
+[Unit]
+Description=Check Cosign main every 30 seconds
+
+[Timer]
+OnBootSec=15s
+OnUnitActiveSec=30s
+AccuracySec=1s
+RandomizedDelaySec=0
+Unit=cosign-update.service
+
+[Install]
+WantedBy=timers.target

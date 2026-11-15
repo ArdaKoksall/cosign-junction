@@ -1,0 +1,32 @@
+services:
+  api:
+    volumes:
+      - ./validation/fixtures/valio:/app/aimo_resources/challenge_portal:ro
+    environment:
+      COSIGN_RUNTIME: production
+      PUBLIC_ORIGIN: http://localhost:${COSIGN_REHEARSAL_WEB_PORT:-8182}
+      NGROK_TOKEN: ${COSIGN_REHEARSAL_NGROK_TOKEN:-}
+      NGROK_DOMAIN: ${NGROK_DOMAIN:-}
+      VALIO_API_KEY: cosign-ci-stub
+      VALIO_API_BASE_URL: http://valio-stub:8080
+      COSIGN_VALIO_STUB_MODE: "true"
+      NVIDIA_API_KEY: ""
+      COSIGN_ENABLE_ORDER_REHEARSAL: "true"
+    depends_on:
+      valio-stub:
+        condition: service_healthy
+  web:
+    ports: !override
+      - "127.0.0.1:${COSIGN_REHEARSAL_WEB_PORT:-8182}:8080"
+  db:
+    ports: !override
+      - "127.0.0.1:${COSIGN_REHEARSAL_DB_PORT:-55434}:5432"
+  valio-stub:
+    restart: unless-stopped
+    extends:
+      file: validation/compose.yaml
+      service: valio-stub
+    environment:
+      VALIO_STUB_AVAILABLE_AMOUNT: "1200"
+    volumes:
+      - ./validation/valio-stub.mjs:/valio-stub.mjs:ro

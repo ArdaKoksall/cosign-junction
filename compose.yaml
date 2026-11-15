@@ -1,0 +1,118 @@
+name: cosign
+
+x-connected-url: &connected-url postgresql://cosign:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/cosign
+x-simulator-url: &simulator-url postgresql://cosign:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/cosign_simulator
+x-api-build: &api-build
+  context: .
+  target: api
+x-migrate-build: &migrate-build
+  context: .
+  target: migrate
+x-web-build: &web-build
+  context: .
+  target: web
+x-web-healthcheck: &web-healthcheck
+  test: ["CMD", "wget", "--quiet", "--output-document=/dev/null", "http://127.0.0.1:8080/healthz"]
+  interval: 3s
+  timeout: 2s
+  retries: 15
+x-api-healthcheck: &api-healthcheck
+  test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/healthz').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+  interval: 3s
+  timeout: 2s
+  retries: 15
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cosign
+      POSTGRES_USER: cosign
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${COSIGN_DB_PORT:-55432}:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./docker/start-database.sql:/docker-entrypoint-initdb.d/10-simulator.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U cosign -d cosign"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+  migrate:
+    build: *migrate-build
+    environment:
+      DATABASE_URL: *connected-url
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    build: *api-build
+    restart: unless-stopped
+    volumes:
+      - ./aimo_resources/challenge_portal:/app/aimo_resources/challenge_portal:ro
+    environment:
+      DATABASE_URL: *connected-url
+      VALIO_API_KEY: ${VALIO_API_KEY:-}
+      NVIDIA_API_KEY: ${NVIDIA_API_KEY:-}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
+      NGROK_TOKEN: ${NGROK_TOKEN:-}
+      NGROK_DOMAIN: ${NGROK_DOMAIN:-}
+      NGROK_UPSTREAM: http://web:8080
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY:?Set OAUTH_ENCRYPTION_KEY}
+      NEMOTRON_MODEL: ${NEMOTRON_MODEL:-nvidia/nemotron-3.5-super-vl-120b-a12b}
+      COSIGN_ENABLE_ORDER_REHEARSAL: ${COSIGN_ENABLE_ORDER_REHEARSAL:-false}
+      TRUST_PROXY: "1"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck: *api-healthcheck
+  web:
+    build: *web-build
+    restart: unless-stopped
+    healthcheck: *web-healthcheck
+    environment:
+      COSIGN_UPSTREAM: api:3001
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${COSIGN_WEB_PORT:-8080}:8080"
+  simulator-migrate:
+    profiles: [simulator]
+    build: *migrate-build
+    environment:
+      DATABASE_URL: *simulator-url
+    depends_on:
+      db:
+        condition: service_healthy
+  simulator:
+    profiles: [simulator]
+    build: *api-build
+    volumes:
+      - ./aimo_resources/challenge_portal:/app/aimo_resources/challenge_portal:ro
+    environment:
+      COSIGN_RUNTIME: legacy
+      COSIGN_ENABLE_SIMULATOR: "true"
+      SIMULATOR_DATABASE_URL: *simulator-url
+      COSIGN_BUYER_TOKEN: ${COSIGN_BUYER_TOKEN:-local-demo-buyer}
+      COSIGN_AGENT_TOKEN: ${COSIGN_AGENT_TOKEN:-local-demo-agent}
+    depends_on:
+      simulator-migrate:
+        condition: service_completed_successfully
+    healthcheck: *api-healthcheck
+  simulator-web:
+    profiles: [simulator]
+    build: *web-build
+    healthcheck: *web-healthcheck
+    environment:
+      COSIGN_UPSTREAM: simulator:3001
+    depends_on:
+      simulator:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${COSIGN_SIMULATOR_WEB_PORT:-8081}:8080"
+
+volumes:
+  postgres:

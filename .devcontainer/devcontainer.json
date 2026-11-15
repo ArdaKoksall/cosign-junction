@@ -1,0 +1,15 @@
+{
+  "name": "Cosign",
+  "dockerComposeFile": ["../compose.yaml", "compose.yaml"],
+  "service": "workspace",
+  "runServices": ["db", "workspace"],
+  "workspaceFolder": "/workspaces/junction",
+  "remoteUser": "node",
+  "shutdownAction": "none",
+  "postCreateCommand": "bash .devcontainer/install.sh",
+  "waitFor": "postCreateCommand",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "Cosign", "onAutoForward": "notify" }
+  }
+}

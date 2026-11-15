@@ -1,0 +1,99 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Cosign API",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/server",
+      "program": "${workspaceFolder}/server/node_modules/tsx/dist/cli.mjs",
+      "args": ["watch", "src/index.ts"],
+      "env": { "PUBLIC_ORIGIN": "http://localhost:5173", "NGROK_TOKEN": "" },
+      "outputCapture": "std",
+      "presentation": { "hidden": true }
+    },
+    {
+      "name": "Cosign frontend",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/client",
+      "program": "${workspaceFolder}/client/node_modules/vite/bin/vite.js",
+      "args": ["--strictPort"],
+      "env": { "VITE_API_BASE": "" },
+      "outputCapture": "std",
+      "presentation": { "hidden": true }
+    },
+    {
+      "name": "Cosign connected API (container)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/server",
+      "runtimeArgs": ["--import", "tsx"],
+      "program": "${workspaceFolder}/server/src/index.ts",
+      "env": {
+        "HOST": "127.0.0.1",
+        "PORT": "3001",
+        "PUBLIC_ORIGIN": "http://localhost:5173",
+        "NGROK_UPSTREAM": "http://127.0.0.1:5173",
+        "TRUST_PROXY": "1"
+      },
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "hidden": true }
+    },
+    {
+      "name": "Cosign simulator API (container)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/server",
+      "runtimeArgs": ["--import", "tsx"],
+      "program": "${workspaceFolder}/server/src/index.ts",
+      "env": { "HOST": "127.0.0.1", "PORT": "3001", "COSIGN_RUNTIME": "legacy", "COSIGN_ENABLE_SIMULATOR": "true" },
+      "skipFiles": ["<node_internals>/**"],
+      "presentation": { "hidden": true }
+    },
+    {
+      "name": "Cosign connected frontend (container)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/client",
+      "program": "${workspaceFolder}/client/node_modules/vite/bin/vite.js",
+      "args": ["--host", "0.0.0.0", "--strictPort"],
+      "env": {
+        "VITE_API_BASE": ""
+      },
+      "outputCapture": "std",
+      "presentation": { "hidden": true }
+    },
+    {
+      "name": "Cosign frontend (container)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/client",
+      "program": "${workspaceFolder}/client/node_modules/vite/bin/vite.js",
+      "args": ["--host", "0.0.0.0", "--strictPort"],
+      "env": { "VITE_API_BASE": "" },
+      "outputCapture": "std",
+      "presentation": { "hidden": true }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Cosign",
+      "configurations": ["Cosign API", "Cosign frontend"],
+      "preLaunchTask": "Cosign: prepare",
+      "stopAll": true
+    },
+    {
+      "name": "Cosign (Dev Container)",
+      "configurations": ["Cosign connected API (container)", "Cosign connected frontend (container)"],
+      "preLaunchTask": "Cosign: prepare connected container",
+      "stopAll": true
+    },
+    {
+      "name": "Cosign Simulator (Dev Container)",
+      "configurations": ["Cosign simulator API (container)", "Cosign frontend (container)"],
+      "preLaunchTask": "Cosign: prepare simulator container",
+      "stopAll": true
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+@font-face {
+  font-family: "Caveat";
+  src: url("../assets/fonts/caveat-cosign.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+.cosign-brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: .52rem;
+  white-space: nowrap;
+}
+
+.cosign-mark {
+  display: block;
+  flex: none;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 24%;
+}
+
+.cosign-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .12em;
+  white-space: nowrap;
+}
+
+.cosign-prefix {
+  color: var(--valio-word);
+  font: 800 .82em/1 var(--font-body);
+  letter-spacing: .075em;
+}
+
+.cosign-script {
+  color: var(--cosign-word);
+  font-family: "Caveat", "Segoe Print", cursive;
+  font-size: 1.25em;
+  font-weight: 700;
+  letter-spacing: -.018em;
+  line-height: .8;
+}
+
+.cosign-brand .cosign-wordmark { font-size: 1.38rem; }
+.cosign-brand .cosign-script { font-size: 1.55em; }
+.cosign-brand[data-inverse] { --valio-word: var(--on-hero); --cosign-word: var(--highlight); }
+.cosign-brand[data-inverse] .cosign-mark { outline: 1px solid #ffffff55; }
+
+@media (max-width: 700px) {
+  .cosign-brand { gap: .36rem; }
+  .cosign-brand .cosign-wordmark { font-size: 1.12rem; }
+  .cosign-mark { width: 2rem; height: 2rem; }
+}

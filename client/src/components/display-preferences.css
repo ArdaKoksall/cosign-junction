@@ -1,0 +1,50 @@
+.display-preferences { position: relative; display: flex; align-items: center; flex: none; }
+.display-preferences > .display-preferences-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: .73rem;
+  font-weight: 780;
+  cursor: pointer;
+}
+.display-preferences > .display-preferences-trigger:hover,
+.display-preferences > .display-preferences-trigger[aria-expanded="true"] {
+  background: var(--accent-soft);
+  border-color: var(--line-strong);
+}
+.display-preferences-panel {
+  position: absolute;
+  inset: calc(100% + 8px) 0 auto auto;
+  z-index: 60;
+  display: grid;
+  gap: 14px;
+  width: 218px;
+  max-width: calc(100vw - 28px);
+  padding: 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  box-shadow: 0 12px 32px #0003;
+}
+.display-preferences-panel[hidden] { display: none; }
+.display-preferences-panel > label { display: grid; gap: 5px; color: var(--ink); font-size: .85rem; font-weight: 700; }
+.display-preferences-panel label > span { display: flex; align-items: center; gap: 8px; }
+.display-preferences-panel select {
+  min-height: 39px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding-inline: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+@media (max-width: 430px) {
+  .display-preferences-chevron { display: none; }
+  .display-preferences > .display-preferences-trigger { gap: 4px; padding-inline: 8px; }
+}

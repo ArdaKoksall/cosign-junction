@@ -1,0 +1,26 @@
+services:
+  workspace:
+    build:
+      context: .devcontainer
+    command: sleep infinity
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://cosign:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/cosign
+      SIMULATOR_DATABASE_URL: postgresql://cosign:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/cosign_simulator
+      COSIGN_BUYER_TOKEN: ${COSIGN_BUYER_TOKEN:-local-demo-buyer}
+      COSIGN_AGENT_TOKEN: ${COSIGN_AGENT_TOKEN:-local-demo-agent}
+      VITE_API_BASE: ""
+      __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS: ${NGROK_DOMAIN:-}
+    volumes:
+      - .:/workspaces/junction
+      - dev-adapter-deps:/workspaces/junction/adapters/node_modules
+      - dev-server-deps:/workspaces/junction/server/node_modules
+      - dev-client-deps:/workspaces/junction/client/node_modules
+
+volumes:
+  dev-adapter-deps:
+  dev-server-deps:
+  dev-client-deps:

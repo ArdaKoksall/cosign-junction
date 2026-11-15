@@ -1,0 +1,446 @@
+.work-heading-image {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--hero);
+}
+
+.work-heading-image .work-heading-photo {
+  display: block;
+  position: absolute;
+  inset: 0;
+  max-height: none;
+  object-position: center 55%;
+}
+
+.work-rehearsal-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--on-hero) 38%, transparent);
+  border-radius: 100px;
+  padding: 5px 11px;
+  margin-bottom: 15px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--on-hero);
+}
+
+.work-rehearsal-label::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--highlight);
+}
+
+.trade-app .work-heading:not(.work-heading--overview) .work-new-request {
+  display: inline-flex;
+}
+
+@media (min-width: 701px) {
+  .trade-app .market-assistant-launcher {
+    display: none;
+  }
+}
+
+.trade-app button:disabled,
+.trade-login button:disabled {
+  cursor: not-allowed;
+}
+
+.trade-motion-button,
+.trade-intake-example {
+  transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.trade-motion-button:active:not(:disabled),
+.trade-intake-example:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.trade-motion-button > svg:last-child,
+.trade-intake-example > svg {
+  transition: transform 180ms ease;
+}
+
+@media (hover: hover) {
+  .trade-motion-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  .trade-motion-button:hover:not(:disabled) > svg:last-child,
+  .trade-intake-example:hover:not(:disabled) > svg {
+    transform: translateX(3px);
+  }
+}
+
+.trade-intake {
+  width: min(540px, calc(100% - 24px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 22px 85px #10283f40;
+}
+
+.trade-intake::backdrop {
+  background: #10283f8f;
+}
+
+.trade-intake > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding: 23px clamp(16px, 5vw, 28px);
+}
+
+.trade-intake h2 {
+  margin: 0;
+  font-size: clamp(24px, 6vw, 32px);
+}
+
+.trade-intake p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.trade-intake header button {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.trade-intake form {
+  display: grid;
+  gap: 20px;
+  padding: 20px clamp(16px, 5vw, 28px) 24px;
+}
+
+.trade-intake fieldset {
+  display: grid;
+  gap: 15px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.trade-intake-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.trade-intake label {
+  align-content: end;
+  min-width: 0;
+}
+
+.trade-intake select {
+  min-height: 46px;
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.trade-intake input {
+  min-width: 0;
+  font-weight: 400;
+}
+
+.trade-intake-product > p {
+  margin: 6px 0 0;
+}
+
+.trade-intake-matches {
+  max-height: 172px;
+  overflow: auto;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.trade-intake-matches button {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.trade-intake-matches button:hover,
+.trade-intake-matches button:focus-visible {
+  background: var(--accent-soft);
+}
+
+.trade-intake-matches small {
+  color: var(--muted);
+}
+
+.trade-intake-example {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 20px;
+  align-items: center;
+  padding: 0 12px 0 0;
+  gap: 14px;
+  text-align: left;
+  background: var(--accent-soft);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.trade-intake-example span {
+  padding: 8px 0;
+}
+
+.trade-intake-example small {
+  display: block;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.trade-intake-example img {
+  width: 64px;
+  height: 100%;
+  min-height: 64px;
+  object-fit: cover;
+}
+
+.trade-intake button[type="submit"] {
+  justify-self: end;
+  background: var(--action);
+  color: var(--on-action);
+}
+
+.purchase-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+.purchase-progress li {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  position: relative;
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+.purchase-progress li + li::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  right: calc(50% + 18px);
+  width: calc(100% - 36px);
+  border-top: 1px solid var(--line-strong);
+}
+
+.purchase-progress li > span {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  width: 29px;
+  height: 29px;
+  background: var(--surface);
+}
+
+.purchase-progress li[aria-current] {
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.purchase-progress li[aria-current] > span {
+  background: var(--action);
+  color: var(--on-action);
+  border-color: transparent;
+}
+
+.purchase-history {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+}
+
+.purchase-history summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.purchase-history ol {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.purchase-history li {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.purchase-history time {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.purchase-request-changes,
+.purchase-rehearsal,
+.purchase-receipt {
+  margin-block: 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--surface-raised);
+}
+
+.purchase-receipt h3 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+
+.purchase-request-changes h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.purchase-request-changes ul {
+  margin: 0;
+  padding-inline-start: 18px;
+}
+
+.purchase-request-changes li span {
+  display: block;
+}
+
+.purchase-receipt dd {
+  min-width: 0;
+}
+
+.purchase-completed {
+  background: var(--success-surface);
+  border-color: color-mix(in srgb, var(--success) 35%, var(--line));
+}
+
+.purchase-completed .purchase-card-label {
+  color: var(--success);
+}
+
+.purchase-history {
+  margin-top: 12px;
+}
+
+.purchase-receipt dl,
+.purchase-offer-signals {
+  margin: 0;
+}
+
+.purchase-receipt dl div,
+.purchase-offer-signals div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.purchase-receipt dd,
+.purchase-offer-signals dd {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .work-heading-image {
+    min-height: 145px;
+  }
+
+  .work-heading-image .work-heading-photo {
+    height: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .work-heading-image .work-heading-photo {
+    animation: trade-delivery-reveal 1100ms cubic-bezier(.2, .75, .3, 1) both;
+  }
+
+  .trade-intake[open],
+  .purchase-receipt {
+    animation: trade-confirm-reveal 240ms ease-out both;
+  }
+
+  .purchase-progress li[aria-current] > span {
+    animation: trade-step-selected 260ms ease-out both;
+  }
+
+  @keyframes trade-delivery-reveal {
+    from { transform: scale(1.08); }
+    to { transform: scale(1); }
+  }
+
+  @keyframes trade-confirm-reveal {
+    from { opacity: 0; transform: translateY(7px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes trade-step-selected {
+    from { box-shadow: 0 0 0 0 var(--accent-soft); }
+    55% { box-shadow: 0 0 0 5px var(--accent-soft); }
+    to { box-shadow: 0 0 0 0 transparent; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trade-motion-button, .trade-intake-example,
+  .trade-motion-button > svg:last-child, .trade-intake-example > svg {
+    transition: none;
+  }
+
+  .trade-app .trade-motion-button:not(:disabled),
+  .trade-app .trade-intake-example:not(:disabled),
+  .trade-app .trade-motion-button:not(:disabled) > svg:last-child,
+  .trade-app .trade-intake-example:not(:disabled) > svg {
+    transform: none;
+  }
+}

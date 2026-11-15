@@ -1,0 +1,13 @@
+.git
+**/.DS_Store
+**/node_modules
+**/dist
+**/src/generated
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+**/data
+docs
+aimo_resources
+
+artifacts

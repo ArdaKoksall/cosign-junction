@@ -1,0 +1,102 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Cosign: prepare connected container",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Cosign: build adapters", "Cosign: generate Prisma", "Cosign: migrate database"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Cosign: prepare simulator container",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Cosign: build adapters", "Cosign: generate Prisma", "Cosign: migrate simulator database"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Cosign: migrate simulator database",
+      "type": "process",
+      "command": "npm",
+      "args": ["--prefix", "server", "run", "db:migrate"],
+      "options": {
+        "env": { "COSIGN_ENABLE_SIMULATOR": "true" }
+      },
+      "problemMatcher": [],
+      "hide": true
+    },
+    {
+      "label": "Cosign: prepare",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Cosign: install adapters",
+        "Cosign: build adapters",
+        "Cosign: install API",
+        "Cosign: generate Prisma",
+        "Cosign: database",
+        "Cosign: migrate database",
+        "Cosign: install frontend"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Cosign: install adapters",
+      "type": "shell",
+      "command": "npm",
+      "args": ["ci", "--prefer-offline", "--no-audit", "--no-fund"],
+      "options": { "cwd": "${workspaceFolder}/adapters" },
+      "problemMatcher": [],
+      "hide": true
+    },
+    {
+      "label": "Cosign: build adapters",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "options": { "cwd": "${workspaceFolder}/adapters" },
+      "problemMatcher": ["$tsc"],
+      "hide": true
+    },
+    {
+      "label": "Cosign: install API",
+      "type": "shell",
+      "command": "npm",
+      "args": ["ci", "--prefer-offline", "--no-audit", "--no-fund"],
+      "options": { "cwd": "${workspaceFolder}/server" },
+      "problemMatcher": [],
+      "hide": true
+    },
+    {
+      "label": "Cosign: generate Prisma",
+      "type": "shell",
+      "command": "npm",
+      "args": ["--prefix", "server", "run", "db:generate"],
+      "problemMatcher": [],
+      "hide": true
+    },
+    {
+      "label": "Cosign: database",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "up", "-d", "--wait", "db"],
+      "problemMatcher": [],
+      "hide": true
+    },
+    {
+      "label": "Cosign: migrate database",
+      "type": "shell",
+      "command": "npm",
+      "args": ["--prefix", "server", "run", "db:migrate"],
+      "problemMatcher": [],
+      "hide": true
+    },
+    {
+      "label": "Cosign: install frontend",
+      "type": "shell",
+      "command": "npm",
+      "args": ["ci", "--prefer-offline", "--no-audit", "--no-fund"],
+      "options": { "cwd": "${workspaceFolder}/client" },
+      "problemMatcher": [],
+      "hide": true
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+services:
+  api:
+    volumes:
+      - ./validation/fixtures/valio:/app/aimo_resources/challenge_portal:ro
+    environment:
+      # These smoke tests explicitly exercise the preserved legacy routes.
+      # Account-backed OAuth/MCP is covered by the isolated integration suite.
+      COSIGN_RUNTIME: legacy
+      COSIGN_BUYER_TOKEN: ${COSIGN_BUYER_TOKEN:-local-demo-buyer}
+      COSIGN_AGENT_TOKEN: ${COSIGN_AGENT_TOKEN:-local-demo-agent}
+      VALIO_API_KEY: cosign-ci-stub
+      VALIO_API_BASE_URL: http://valio-stub:8080
+      NVIDIA_API_KEY: ""
+      COSIGN_ENABLE_CONNECTED_REHEARSAL: "true"
+    depends_on:
+      valio-stub:
+        condition: service_healthy
+  simulator:
+    profiles: [simulator]
+    volumes:
+      - ./validation/fixtures/valio:/app/aimo_resources/challenge_portal:ro
+  valio-stub:
+    image: node:24-bookworm-slim
+    command: ["node", "/valio-stub.mjs"]
+    volumes:
+      - ./validation/valio-stub.mjs:/valio-stub.mjs:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/healthz').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 3s
+      timeout: 2s
+      retries: 15

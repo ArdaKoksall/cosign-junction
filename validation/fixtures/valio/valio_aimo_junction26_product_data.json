@@ -1,0 +1,93 @@
+[
+  {
+    "id": "900001",
+    "category": "10400",
+    "vendorName": "Demo supplier",
+    "salesUnit": "ST",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "units": [{ "unitId": "ST", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [
+        { "language": "en", "value": "Lactose-free milk 1 L" },
+        { "language": "fi", "value": "Laktoositon maito 1 l" }
+      ],
+      "classifications": [
+        { "name": "nutritionalClaim", "values": [{ "id": "FREE_FROM_LACTOSE", "unit": "FREE_FROM" }] },
+        { "name": "allergen", "values": [{ "id": "AM", "unit": "CONTAINS" }] }
+      ],
+      "unitConversions": [
+        { "synkkaPackagingType": "BASE_UNIT_OR_EACH", "volume": { "unit": "LTR", "value": 1 } }
+      ]
+    }
+  },
+  {
+    "id": "900002",
+    "category": "21340",
+    "vendorName": "Demo supplier",
+    "salesUnit": "ST",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "units": [{ "unitId": "ST", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [
+        { "language": "en", "value": "Parboiled rice 5 kg" },
+        { "language": "fi", "value": "Parboiled-riisi 5 kg" }
+      ],
+      "classifications": [
+        {
+          "name": "nutritionalClaim",
+          "values": [
+            { "id": "FREE_FROM_GLUTEN", "unit": "FREE_FROM" },
+            { "id": "VEGAN", "unit": "DIET" }
+          ]
+        },
+        { "name": "allergen", "values": [{ "id": "AM", "unit": "FREE_FROM" }] }
+      ],
+      "unitConversions": [
+        { "synkkaPackagingType": "BASE_UNIT_OR_EACH", "netWeight": { "unit": "KGM", "value": 5 } }
+      ]
+    }
+  },
+  {
+    "id": "900003",
+    "vendorName": "Demo supplier",
+    "salesUnit": "ST",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "units": [{ "unitId": "ST", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [
+        { "language": "en", "value": "Boneless chicken breast 5 kg" },
+        { "language": "fi", "value": "Luuton broilerin rintafilee 5 kg" }
+      ],
+      "unitConversions": [
+        { "synkkaPackagingType": "BASE_UNIT_OR_EACH", "netWeight": { "unit": "KGM", "value": 5 } }
+      ]
+    }
+  },
+  {
+    "id": "900004",
+    "vendorName": "Demo supplier",
+    "salesUnit": "KG",
+    "baseUnit": "KG",
+    "allowedLotSize": 1,
+    "units": [{ "unitId": "KG", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [
+        { "language": "en", "value": "Whole apples" },
+        { "language": "fi", "value": "Kokonaiset omenat" }
+      ],
+      "classifications": [
+        {
+          "name": "nutritionalClaim",
+          "values": [
+            { "id": "FREE_FROM_GLUTEN", "unit": "FREE_FROM" },
+            { "id": "VEGAN", "unit": "DIET" }
+          ]
+        },
+        { "name": "allergen", "values": [{ "id": "AM", "unit": "FREE_FROM" }] }
+      ]
+    }
+  }
+]

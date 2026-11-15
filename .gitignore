@@ -1,0 +1,19 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local-only vendor preview stylesheet; the app has its own layout fallback.
+/client/src/heroui-pro.css
+
+# Local browser verification captures
+/artifacts/trade/
+
+# Local test account credentials
+/examples/test-accounts.txt
+
+# Organizer materials supplied locally by authorized challenge participants
+/aimo_resources/challenge_portal/

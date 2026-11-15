@@ -1,0 +1,99 @@
+name: Verify Cosign
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      trade-test-db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: cosign
+          POSTGRES_PASSWORD: cosign-ci-only
+          POSTGRES_DB: trade_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cosign -d trade_test"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      COMPOSE_FILE: compose.yaml:validation/compose.yaml
+      POSTGRES_PASSWORD: cosign-ci-only
+      PUBLIC_ORIGIN: http://localhost:8080
+      TEST_TRADE_DATABASE_URL: postgresql://cosign:cosign-ci-only@localhost:5432/trade_test
+      COSIGN_BUYER_TOKEN: local-demo-buyer
+      COSIGN_AGENT_TOKEN: local-demo-agent
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            adapters/package-lock.json
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Test adapters, API and client
+        run: |
+          npm --prefix adapters ci
+          npm --prefix adapters run build
+          npm --prefix adapters test
+          npm --prefix server ci
+          npm --prefix server run typecheck
+          npm --prefix server run build
+          npm --prefix server test
+          npm --prefix client ci
+          npm --prefix client test
+
+      - name: Generate isolated Compose encryption key
+        run: echo "OAUTH_ENCRYPTION_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Start both workspaces on clean PostgreSQL databases
+        run: docker compose --profile simulator up --build -d --wait web simulator-web
+
+      - name: Verify the connected request workflow
+        env:
+          JUNCTION_API_BASE: http://localhost:8080
+        run: |
+          npm --prefix validation run connected
+          JUNCTION_PRODUCT_ID=900001 \
+            JUNCTION_DEADLINE="$(node -p 'new Date(Date.now() + 3 * 86_400_000).toISOString()')" \
+            npm --prefix validation run rehearsal
+
+      - name: Verify approvals, retries and weekly mandate
+        env:
+          JUNCTION_API_BASE: http://localhost:8081
+        run: |
+          npm --prefix validation test
+          npm --prefix validation run routine
+
+      - name: Verify the account rehearsal with the official MCP SDK
+        run: |
+          docker compose -f compose.yaml -f validation/compose-account-rehearsal.yaml -p cosign-account-smoke up --build -d --wait web
+          export COSIGN_REHEARSAL_EMAIL=rehearsal-smoke@cosign.invalid
+          export COSIGN_REHEARSAL_PASSWORD="$(openssl rand -hex 16)"
+          node -e 'console.log(JSON.stringify({ name: "Rehearsal smoke buyer", email: process.env.COSIGN_REHEARSAL_EMAIL, password: process.env.COSIGN_REHEARSAL_PASSWORD, customerId: "rehearsal-smoke" }))' |
+            docker compose -f compose.yaml -f validation/compose-account-rehearsal.yaml -p cosign-account-smoke exec -T api node dist/trade/provision.js
+          npm --prefix validation run account-rehearsal
+
+      - name: Show service logs if verification fails
+        if: failure()
+        run: |
+          docker compose --profile simulator logs --tail=80
+          docker compose -f compose.yaml -f validation/compose-account-rehearsal.yaml -p cosign-account-smoke logs --tail=80
+
+      - name: Stop services
+        if: always()
+        run: |
+          docker compose --profile simulator down
+          docker compose -f compose.yaml -f validation/compose-account-rehearsal.yaml -p cosign-account-smoke down -v

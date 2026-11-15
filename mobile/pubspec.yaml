@@ -1,0 +1,56 @@
+name: cosign_mobile
+description: The Cosign purchasing workspace for Android and iOS.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  dio: ^5.11.1
+  drift: ^2.35.4
+  drift_flutter: ^0.3.1
+  flutter:
+    sdk: flutter
+  flutter_markdown_plus: ^1.0.12
+  flutter_riverpod: ^3.5.0
+  flutter_secure_storage: ^11.2.0
+  intl: ^0.20.3
+  material_ui: ^1.1.0
+  shared_preferences: ^2.5.6
+  timezone: ^0.11.2
+  url_launcher: ^6.3.3
+
+dev_dependencies:
+  build_runner: ^2.17.1
+  drift_dev: ^2.35.3
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+  shared_preferences_platform_interface: ^2.4.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/brand/
+    - assets/licenses/
+  fonts:
+    - family: DM Sans
+      fonts:
+        - asset: assets/fonts/DMSans-400.ttf
+        - asset: assets/fonts/DMSans-500.ttf
+          weight: 500
+        - asset: assets/fonts/DMSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/DMSans-700.ttf
+          weight: 700
+        - asset: assets/fonts/DMSans-800.ttf
+          weight: 800
+    - family: Barlow Semi Condensed
+      fonts:
+        - asset: assets/fonts/BarlowSemiCondensed-Bold.ttf
+          weight: 700
+    - family: Caveat
+      fonts:
+        - asset: assets/fonts/Caveat-Cosign.ttf
+          weight: 700

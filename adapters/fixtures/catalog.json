@@ -1,0 +1,192 @@
+[
+  {
+    "id": "M0",
+    "category": "10400",
+    "vendorName": "Fixture Dairy",
+    "salesUnit": "KI",
+    "baseUnit": "ST",
+    "salesUnitGtin": "00000000000001",
+    "allowedLotSize": 1,
+    "substitutions": [{ "product": "M0", "substituteProduct": "M1" }],
+    "units": [
+      { "unitId": "KI", "gtin": "00000000000001", "sizeInBaseUnits": 1 },
+      { "unitId": "ST", "gtin": "00000000000011", "sizeInBaseUnits": 1 }
+    ],
+    "synkkaData": {
+      "names": [{ "language": "en", "value": "Fixture lactose-free milk 10 L usual SKU" }],
+      "classifications": [
+        {
+          "name": "nutritionalClaim",
+          "type": "ENUM",
+          "values": [{ "id": "FREE_FROM_LACTOSE", "unit": "FREE_FROM", "synkkaId": "LACTOSE" }]
+        },
+        { "name": "allergen", "type": "ENUM", "values": [{ "id": "AM", "unit": "CONTAINS" }] }
+      ],
+      "unitConversions": [
+        {
+          "synkkaPackagingType": "BASE_UNIT_OR_EACH",
+          "volume": { "unit": "LTR", "value": 10 },
+          "netWeight": { "unit": "KGM", "value": 10.3 },
+          "grossWeight": { "unit": "KGM", "value": 10.5 },
+          "height": { "unit": "MMT", "value": 1 },
+          "length": { "unit": "MMT", "value": 1 },
+          "width": { "unit": "MMT", "value": 1 }
+        }
+      ]
+    }
+  },
+  {
+    "id": "M1",
+    "category": "10400",
+    "vendorName": "Fixture Dairy",
+    "salesUnit": "KI",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "substitutions": [],
+    "units": [{ "unitId": "KI", "gtin": "00000000000002", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [{ "language": "en", "value": "Fixture lactose-free milk 10 L alternative" }],
+      "classifications": [
+        {
+          "name": "nutritionalClaim",
+          "type": "ENUM",
+          "values": [{ "id": "FREE_FROM_LACTOSE", "unit": "FREE_FROM", "synkkaId": "LACTOSE" }]
+        },
+        { "name": "allergen", "type": "ENUM", "values": [{ "id": "AM", "unit": "CONTAINS" }] }
+      ],
+      "unitConversions": [
+        {
+          "synkkaPackagingType": "BASE_UNIT_OR_EACH",
+          "volume": { "unit": "LTR", "value": 10 },
+          "netWeight": { "unit": "KGM", "value": 10.3 },
+          "grossWeight": { "unit": "KGM", "value": 10.5 },
+          "height": { "unit": "MMT", "value": 1 },
+          "length": { "unit": "MMT", "value": 1 },
+          "width": { "unit": "MMT", "value": 1 }
+        }
+      ]
+    }
+  },
+  {
+    "id": "M2",
+    "category": "10400",
+    "vendorName": "Fixture Dairy",
+    "salesUnit": "KI",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "substitutions": [],
+    "units": [{ "unitId": "KI", "gtin": "00000000000003", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [{ "language": "en", "value": "Fixture cheaper milk 10 L contradicted claim" }],
+      "classifications": [
+        {
+          "name": "nutritionalClaim",
+          "type": "ENUM",
+          "values": [{ "id": "FREE_FROM_LACTOSE", "unit": "CONTAINS", "synkkaId": "LACTOSE" }]
+        },
+        { "name": "allergen", "type": "ENUM", "values": [{ "id": "AM", "unit": "CONTAINS" }] }
+      ],
+      "unitConversions": [
+        {
+          "synkkaPackagingType": "BASE_UNIT_OR_EACH",
+          "volume": { "unit": "LTR", "value": 10 },
+          "netWeight": { "unit": "KGM", "value": 10.3 },
+          "grossWeight": { "unit": "KGM", "value": 10.5 },
+          "height": { "unit": "MMT", "value": 1 },
+          "length": { "unit": "MMT", "value": 1 },
+          "width": { "unit": "MMT", "value": 1 }
+        }
+      ]
+    }
+  },
+  {
+    "id": "M3",
+    "category": "10400",
+    "vendorName": "Fixture Dairy",
+    "salesUnit": "KI",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "substitutions": [],
+    "units": [{ "unitId": "KI", "gtin": "00000000000004", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [{ "language": "en", "value": "Fixture milk 10 L missing lactose evidence" }],
+      "classifications": [
+        { "name": "allergen", "type": "ENUM", "values": [{ "id": "AM", "unit": "CONTAINS" }] }
+      ],
+      "unitConversions": [
+        {
+          "synkkaPackagingType": "BASE_UNIT_OR_EACH",
+          "volume": { "unit": "LTR", "value": 10 },
+          "netWeight": { "unit": "KGM", "value": 10.3 },
+          "grossWeight": { "unit": "KGM", "value": 10.5 },
+          "height": { "unit": "MMT", "value": 1 },
+          "length": { "unit": "MMT", "value": 1 },
+          "width": { "unit": "MMT", "value": 1 }
+        }
+      ]
+    }
+  },
+  {
+    "id": "M4",
+    "category": "10400",
+    "vendorName": "Fixture Dairy",
+    "salesUnit": "KI",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "substitutions": [],
+    "units": [{ "unitId": "KI", "gtin": "00000000000005", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [{ "language": "en", "value": "Fixture lactose-free milk 20 L alternative" }],
+      "classifications": [
+        {
+          "name": "nutritionalClaim",
+          "type": "ENUM",
+          "values": [{ "id": "FREE_FROM_LACTOSE", "unit": "FREE_FROM", "synkkaId": "LACTOSE" }]
+        },
+        { "name": "allergen", "type": "ENUM", "values": [{ "id": "AM", "unit": "CONTAINS" }] }
+      ],
+      "unitConversions": [
+        {
+          "synkkaPackagingType": "BASE_UNIT_OR_EACH",
+          "volume": { "unit": "LTR", "value": 20 },
+          "netWeight": { "unit": "KGM", "value": 20.6 },
+          "grossWeight": { "unit": "KGM", "value": 21 },
+          "height": { "unit": "MMT", "value": 1 },
+          "length": { "unit": "MMT", "value": 1 },
+          "width": { "unit": "MMT", "value": 1 }
+        }
+      ]
+    }
+  },
+  {
+    "id": "TERM",
+    "category": "10400",
+    "vendorName": "Fixture Dairy",
+    "salesUnit": "ST",
+    "baseUnit": "ST",
+    "allowedLotSize": 1,
+    "substitutions": [],
+    "units": [{ "unitId": "ST", "gtin": "00000000000006", "sizeInBaseUnits": 1 }],
+    "synkkaData": {
+      "names": [{ "language": "en", "value": "Fixture terminal milk unknown stock" }],
+      "classifications": [
+        {
+          "name": "nutritionalClaim",
+          "type": "ENUM",
+          "values": [{ "id": "FREE_FROM_LACTOSE", "unit": "FREE_FROM", "synkkaId": "LACTOSE" }]
+        }
+      ],
+      "unitConversions": [
+        {
+          "synkkaPackagingType": "BASE_UNIT_OR_EACH",
+          "volume": { "unit": "LTR", "value": 1 },
+          "netWeight": { "unit": "KGM", "value": 1 },
+          "grossWeight": { "unit": "KGM", "value": 1 },
+          "height": { "unit": "MMT", "value": 1 },
+          "length": { "unit": "MMT", "value": 1 },
+          "width": { "unit": "MMT", "value": 1 }
+        }
+      ]
+    }
+  }
+]

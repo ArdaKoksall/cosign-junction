@@ -1,0 +1,101 @@
+.catalog-suggestions-inline {
+  min-width: 0;
+  margin-block: 6px 10px;
+  color: var(--muted);
+  font-size: .8rem;
+}
+
+.catalog-suggestions-inline ul {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+  border-block: 1px solid var(--line);
+}
+
+.catalog-suggestions-inline li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 0;
+}
+
+.catalog-suggestions-inline li + li { border-top: 1px solid var(--line); }
+.catalog-suggestions-inline .button { flex-shrink: 0; }
+.catalog-suggestion-name { min-width: 0; overflow-wrap: anywhere; }
+.catalog-suggestion-name strong { display: block; color: var(--ink); }
+.catalog-suggestion-name small { display: block; font-size: .75rem; }
+
+/* Closest matches when nothing meets the search exactly. */
+.catalog-suggestions-status[data-closest] {
+  padding: 8px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.catalog-suggestions-inline > ul > li[data-best] {
+  padding-inline: 8px;
+  background: color-mix(in srgb, var(--highlight) 12%, var(--surface-raised));
+  box-shadow: inset 4px 0 0 var(--highlight);
+}
+
+.catalog-suggestions-inline .catalog-best-badge {
+  display: inline-block;
+  margin-bottom: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--highlight);
+  color: var(--on-highlight);
+  font-size: .7rem;
+  font-weight: 750;
+}
+
+.catalog-suggestion-name .catalog-suggestion-conversion { margin-top: 2px; color: var(--accent); font-weight: 650; }
+
+.catalog-suggestions-inline ul.catalog-suggestion-mismatches {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 0;
+  border: 0;
+}
+
+.catalog-suggestions-inline .catalog-suggestion-mismatches li {
+  display: block;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--warning-surface);
+  color: var(--warning);
+  font-size: .75rem;
+  line-height: 1.35;
+}
+
+.catalog-suggestions-inline .catalog-suggestion-mismatches li[data-risk="health"] {
+  background: var(--danger-surface);
+  color: var(--danger);
+}
+
+/* "Did you mean milk?" spelling correction. */
+.catalog-did-you-mean {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: .85rem;
+}
+
+.catalog-did-you-mean button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  font-style: italic;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.catalog-did-you-mean button:disabled { cursor: default; opacity: .6; }
