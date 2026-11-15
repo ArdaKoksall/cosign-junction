@@ -6,10 +6,10 @@ import {
   type FormEvent,
 } from "react";
 import {
+  ArrowUp,
   ArrowUpRight,
   Link2,
   LogOut,
-  Play,
   X,
   Search,
   ArrowRight,
@@ -40,8 +40,13 @@ import { DisplayPreferences } from "../components/DisplayPreferences";
 import { useI18n } from "../i18n";
 import { scopeLabel, tradeMessage, type AgentClient } from "./tradeCopy";
 import type { ProductRequirement } from "../types";
+import { FooterContent, NavIcon } from "./chrome";
+import "@fontsource/dm-mono/latin-400.css";
+import "@fontsource/dm-mono/latin-500.css";
+import "@fontsource/caveat/latin-700.css";
 import "./trade.css";
 import "./purchase-workflow.css";
+import "./workspace.css";
 
 export function ProductionApp() {
   const { t } = useI18n();
@@ -86,11 +91,29 @@ export function ProductionApp() {
   const [agentOpen, setAgentOpen] = useState(Boolean(selected));
   const [newAgentTask, setNewAgentTask] = useState(false);
   const requestOpen = !newAgentTask && selected.startsWith("run_");
+  const launcherRef = useRef<HTMLButtonElement>(null);
+  const drawerLayerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    // "/" jumps to the catalog search, as long as the buyer is not already typing.
+    const shortcut = (event: KeyboardEvent) => {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable]")) return;
+      if (!searchRef.current || searchRef.current.closest("[inert]")) return;
+      event.preventDefault();
+      searchRef.current.focus();
+    };
+    document.addEventListener("keydown", shortcut);
+    return () => document.removeEventListener("keydown", shortcut);
+  }, []);
   useEffect(() => {
     if (!agentOpen || !session) return;
     const previous = document.activeElement as HTMLElement | null;
     const overflow = document.body.style.overflow;
+    const layer = drawerLayerRef.current;
+    if (layer) layer.inert = false;
     document.body.style.overflow = "hidden";
     panelRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
     const trap = (event: KeyboardEvent) => {
@@ -116,7 +139,9 @@ export function ProductionApp() {
     return () => {
       document.body.style.overflow = overflow;
       document.removeEventListener("keydown", trap);
-      previous?.focus();
+      if (layer) layer.inert = true;
+      if (previous?.isConnected && previous !== document.body) previous.focus();
+      else launcherRef.current?.focus();
     };
   }, [agentOpen, session]);
   const [search, setSearch] = useState("");
@@ -351,6 +376,8 @@ export function ProductionApp() {
         </div>
       </main>
     );
+  const canSend = !busy && Boolean(session.nemotronModel)
+    && (newAgentTask || !selected || Boolean(detail));
   return (
     <div className="trade-app">
       <header className="trade-header" inert={agentOpen}>
@@ -367,12 +394,14 @@ export function ProductionApp() {
         >
           <Search size={21} />
           <input
+            ref={searchRef}
             aria-label={t("Search products", "Hae tuotteita")}
             placeholder={t("Search products for your kitchen", "Hae tuotteita keittiöösi")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             required
           />
+          <kbd aria-hidden="true">/</kbd>
           <button type="submit" aria-label={t("Search catalog", "Hae tuotevalikoimasta")}>
             <ArrowRight size={19} />
           </button>
@@ -385,8 +414,11 @@ export function ProductionApp() {
             ["connections", t("Connections", "Yhteydet")],
             ["policy", t("Settings", "Asetukset")],
           ].map(([value, title]) => (
-            <button
+            <motion.button
               key={value}
+              initial="rest"
+              animate="rest"
+              whileHover={reduced ? undefined : "hover"}
               aria-current={tab === value ? "page" : undefined}
               onClick={() => {
                 if (value === "connections") setSetupClient(undefined);
@@ -394,15 +426,18 @@ export function ProductionApp() {
                 navigate(value);
               }}
             >
-              {title}
               {tab === value && (
                 <motion.span
                   className="work-nav-indicator"
                   layoutId="active-page"
-                  transition={{ duration: reduced ? 0 : 0.25 }}
+                  transition={
+                    reduced ? { duration: 0 } : { type: "spring", duration: 0.4, bounce: 0.14 }
+                  }
                 />
               )}
-            </button>
+              <NavIcon page={value} />
+              <span>{title}</span>
+            </motion.button>
           ))}
         </nav>
         <button
@@ -554,6 +589,7 @@ export function ProductionApp() {
       )}
       {!agentOpen && (
         <button
+          ref={launcherRef}
           className="market-assistant-launcher"
           aria-label={t("Chat with Cosign", "Keskustele Cosign-avustajan kanssa")}
           aria-haspopup="dialog"
@@ -564,17 +600,29 @@ export function ProductionApp() {
           <MessageCircle size={18} />
         </button>
       )}
+      <AnimatePresence>
       {agentOpen && (
-        <div className="market-drawer-layer">
+        <motion.div
+          ref={drawerLayerRef}
+          className="market-drawer-layer"
+          initial={{ opacity: reduced ? 1 : 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduced ? 0 : 0.2 }}
+        >
           <button
             className="market-scrim"
             tabIndex={-1}
             aria-label={t("Close assistant", "Sulje avustaja")}
             onClick={() => setAgentOpen(false)}
           />
-          <aside
+          <motion.aside
             ref={panelRef}
             className="market-drawer"
+            initial={reduced ? false : { x: "100%" }}
+            animate={{ x: 0 }}
+            exit={reduced ? undefined : { x: "30%", opacity: 0 }}
+            transition={{ type: "spring", duration: 0.45, bounce: 0 }}
             role="dialog"
             aria-modal="true"
             aria-label={requestOpen ? t("Purchase request", "Hankintapyyntö") : t("Cosign assistant", "Cosign-avustaja")}
@@ -586,7 +634,8 @@ export function ProductionApp() {
               <CoSignMark className="market-assistant-brand" />
               <div>
                 <h2>{requestOpen ? t("Purchase request", "Hankintapyyntö") : <><CosignName />{t(" assistant", "-avustaja")}</>}</h2>
-                <p>
+                <p className={live ? "cs-live is-live" : "cs-live"}>
+                  <i aria-hidden="true" />
                   {!requestOpen && "NVIDIA Nemotron · "}
                   {live ? t("Live updates", "Reaaliaikaiset päivitykset") : t("Connecting to live updates…", "Yhdistetään reaaliaikaisiin päivityksiin…")}
                 </p>
@@ -645,7 +694,7 @@ export function ProductionApp() {
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (!newAgentTask && selected && !detail) return;
+                  if (!canSend) return;
                   void action(async () => {
                     const runId = selectedRef.current;
                     const owner = accountRef.current;
@@ -684,28 +733,51 @@ export function ProductionApp() {
                   }
                   maxLength={8000}
                   placeholder={t("Message your assistant…", "Kirjoita avustajalle…")}
+                  onKeyDown={(event) => {
+                    // Enter sends; Shift+Enter keeps writing on a new line.
+                    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+                    event.preventDefault();
+                    if (canSend) event.currentTarget.form?.requestSubmit();
+                  }}
                 />
                 <div className="trade-compose-footer">
                   <small>
                     {session.nemotronModel
                       ? t("Powered by NVIDIA Nemotron", "Käyttää NVIDIA Nemotronia")
                       : t("Agent service is not configured", "Avustajapalvelua ei ole määritetty")}
+                    <span className="cs-compose-hint">
+                      {t("Enter to send · Shift+Enter for a new line", "Enter lähettää · Shift+Enter tekee rivinvaihdon")}
+                    </span>
                   </small>
                   <Button
                     type="submit"
-                    disabled={busy || !session.nemotronModel || Boolean(!newAgentTask && selected && !detail)}
+                    disabled={!canSend}
                   >
-                    <Play size={15} />
-                    {t("Send message", "Lähetä viesti")}
+                    <ArrowUp size={17} />
+                    <span>{t("Send message", "Lähetä viesti")}</span>
                   </Button>
                 </div>
               </form>
             </section>}
-          </aside>
-        </div>
+          </motion.aside>
+        </motion.div>
       )}
+      </AnimatePresence>
       <footer className="trade-footer" inert={agentOpen}>
-        <CoSignBrand inverse />
+        <FooterContent
+          live={live}
+          model={session.nemotronModel}
+          onPage={(page) => {
+            if (page === "connections") setSetupClient(undefined);
+            if (page === "requests") setRequestFilter("all");
+            navigate(page);
+            window.scrollTo({ top: 0 });
+          }}
+          onAsk={() => {
+            setNewAgentTask(true);
+            setAgentOpen(true);
+          }}
+        />
       </footer>
     </div>
   );
@@ -746,70 +818,105 @@ function PolicyEditor({
       setSaved(true);
     });
   }
+  const same = (left: string[], right: string[]) =>
+    left.length === right.length && left.every((value) => right.includes(value));
+  const current = session.account.policy;
+  const dirty =
+    policy.automaticLimitCents !== current.automaticLimitCents ||
+    !same(policy.requiredClaims, current.requiredClaims) ||
+    !same(policy.freeFromAllergens, current.freeFromAllergens);
+  const limit = new Intl.NumberFormat(locale === "fi" ? "fi-FI" : "en-FI", {
+    style: "currency",
+    currency: "EUR",
+  }).format(policy.automaticLimitCents / 100);
   return (
-    <form className="trade-settings" onSubmit={submit}>
-      <span className="trade-eyebrow">{t("PURCHASING AUTHORITY", "OSTOVALTUUDET")}</span>
-      <h1>{t("You set the boundaries.", "Määritä hankintasäännöt")}</h1>
-      <p>
-        {t(
-          "These rules apply to every agent connected to this account. Changing them invalidates existing drafts and approvals.",
-          "Säännöt koskevat kaikkia tiliin yhdistettyjä avustajia. Niiden muuttaminen mitätöi aiemmat luonnokset ja hyväksynnät.",
-        )}
-      </p>
-      <label>
-        {t("Automatic spending limit (€ per order, ex VAT)", "Automaattinen ostoraja (€/tilaus, alv 0 %)")}
-        <input
-          type="number"
-          min="0"
-          max="1000000"
-          step="0.01"
-          required
-          value={policy.automaticLimitCents / 100}
-          onChange={(event) => {
-            setSaved(false);
-            setPolicy({
-              ...policy,
-              automaticLimitCents: Math.round(Number(event.target.value) * 100),
-            });
-          }}
-        />
-      </label>
-      <p className="trade-muted">
-        {t(
-          "A zero limit requires your approval for paid purchases. Unverified conditions still require review.",
-          "Nollan euron rajalla kaikki maksulliset hankinnat vaativat hyväksynnän. Vahvistamattomat ehdot on aina tarkistettava.",
-        )}
-      </p>
-      <fieldset>
-        <legend>{t("Mandatory product requirements", "Pakolliset tuotevaatimukset")}</legend>
-        {Object.keys(productRequirementLabels).map((value) => (
-          <label key={value} className="trade-checkbox">
-            <input
-              type="checkbox"
-              checked={policy.requiredClaims.includes(value)}
-              onChange={() => toggle("requiredClaims", value)}
-            />
-            {productRequirementLabel(value as ProductRequirement, locale)}
+    <form className="trade-settings cs-rules" onSubmit={submit}>
+      <header className="cs-rules-head">
+        <span className="trade-eyebrow">{t("PURCHASING AUTHORITY", "OSTOVALTUUDET")}</span>
+        <h1>{t("You set the boundaries.", "Määritä hankintasäännöt")}</h1>
+        <p>
+          {t(
+            "These rules apply to every agent connected to this account. Changing them invalidates existing drafts and approvals.",
+            "Säännöt koskevat kaikkia tiliin yhdistettyjä avustajia. Niiden muuttaminen mitätöi aiemmat luonnokset ja hyväksynnät.",
+          )}
+        </p>
+      </header>
+      <div className="cs-rules-grid">
+        <section className="cs-limit">
+          <label>
+            {t("Automatic spending limit (€ per order, ex VAT)", "Automaattinen ostoraja (€/tilaus, alv 0 %)")}
+            <span className="cs-limit-field">
+              <span aria-hidden="true">€</span>
+              <input
+                type="number"
+                min="0"
+                max="1000000"
+                step="0.01"
+                required
+                value={policy.automaticLimitCents / 100}
+                onChange={(event) => {
+                  setSaved(false);
+                  setPolicy({
+                    ...policy,
+                    automaticLimitCents: Math.round(Number(event.target.value) * 100),
+                  });
+                }}
+              />
+            </span>
           </label>
-        ))}
-      </fieldset>
-      <fieldset>
-        <legend>{t("Require explicit absence of these allergens", "Vaadi, että tuote on todistetusti vapaa näistä allergeeneista")}</legend>
-        {Object.keys(allergenOptions).map((value) => (
-          <label key={value} className="trade-checkbox">
-            <input
-              type="checkbox"
-              checked={policy.freeFromAllergens.includes(value)}
-              onChange={() => toggle("freeFromAllergens", value)}
-            />
-            {allergenLabel(value, locale)}
-          </label>
-        ))}
-      </fieldset>
-      <Button type="submit" disabled={busy}>
-        {t("Save authority rules", "Tallenna hankintasäännöt")}
-      </Button>
-      {saved && <p role="status">{t("Your rules have been saved.", "Hankintasäännöt tallennettu.")}</p>}
+          <p className="cs-limit-state" key={policy.automaticLimitCents === 0 ? "all" : "above"}>
+            {policy.automaticLimitCents === 0
+              ? t("Every purchase needs your approval.", "Jokainen osto vaatii hyväksyntäsi.")
+              : t(`Purchases above ${limit} need your approval.`, `Yli ${limit} ostot vaativat hyväksyntäsi.`)}
+          </p>
+          <p className="trade-muted">
+            {t(
+              "A zero limit requires your approval for paid purchases. Unverified conditions still require review.",
+              "Nollan euron rajalla kaikki maksulliset hankinnat vaativat hyväksynnän. Vahvistamattomat ehdot on aina tarkistettava.",
+            )}
+          </p>
+        </section>
+        <div className="cs-rules-lists">
+          <fieldset>
+            <legend>{t("Mandatory product requirements", "Pakolliset tuotevaatimukset")}</legend>
+            {Object.keys(productRequirementLabels).map((value) => (
+              <label key={value} className="trade-checkbox">
+                <input
+                  type="checkbox"
+                  checked={policy.requiredClaims.includes(value)}
+                  onChange={() => toggle("requiredClaims", value)}
+                />
+                {productRequirementLabel(value as ProductRequirement, locale)}
+              </label>
+            ))}
+          </fieldset>
+          <fieldset>
+            <legend>{t("Require explicit absence of these allergens", "Vaadi, että tuote on todistetusti vapaa näistä allergeeneista")}</legend>
+            {Object.keys(allergenOptions).map((value) => (
+              <label key={value} className="trade-checkbox">
+                <input
+                  type="checkbox"
+                  checked={policy.freeFromAllergens.includes(value)}
+                  onChange={() => toggle("freeFromAllergens", value)}
+                />
+                {allergenLabel(value, locale)}
+              </label>
+            ))}
+          </fieldset>
+        </div>
+      </div>
+      <div className="cs-rules-save" data-dirty={dirty || undefined}>
+        <Button type="submit" disabled={busy}>
+          {t("Save authority rules", "Tallenna hankintasäännöt")}
+        </Button>
+        {saved ? (
+          <p role="status" className="cs-rules-saved">
+            {t("Your rules have been saved.", "Hankintasäännöt tallennettu.")}
+          </p>
+        ) : (
+          dirty && <p className="cs-rules-dirty">{t("Unsaved changes", "Tallentamattomia muutoksia")}</p>
+        )}
+      </div>
     </form>
   );
 }

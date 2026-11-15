@@ -139,6 +139,29 @@ it("passes the catalog basket to the assistant as exact product IDs and sales un
   });
 });
 
+it("keeps Enter from bypassing the disabled assistant composer", async () => {
+  const fetch = vi.fn(async (path: string) => {
+    if (path === "/api/session") return reply(session);
+    if (path === "/api/runs") return reply([]);
+    if (path === "/api/tools/browse_catalog") return reply({ products: [], hasMore: false });
+    throw new Error(`Unexpected request ${path}`);
+  });
+  vi.stubGlobal("fetch", fetch);
+  await act(async () => root.render(<ProductionApp />));
+  await act(async () => button("Chat with Cosign").click());
+
+  const composer = drawer().querySelector("textarea")!;
+  const form = composer.form!;
+  const requestSubmit = vi.spyOn(form, "requestSubmit");
+  expect(button("Send message").disabled).toBe(true);
+  await act(async () => {
+    composer.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  });
+  expect(requestSubmit).not.toHaveBeenCalled();
+  expect(fetch.mock.calls.some(([path]) => path.startsWith("/api/agent/jobs"))).toBe(false);
+});
+
 it("creates a structured Monday milk request without Nemotron and opens it for lookup", async () => {
   const milk = request("run_monday", "Milk");
   const fetch = vi.fn(async (path: string, _options?: RequestInit) => {

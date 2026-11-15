@@ -26,6 +26,8 @@ import { CosignName } from "../components/CoSignBrand";
 import { useI18n } from "../i18n";
 import { ProfileRecommendations, usePreferredCatalogQuery } from "../onboarding/Onboarding";
 import { activityLabel, agentClientLabel, agentClients, runStatusLabel, type AgentClient } from "./tradeCopy";
+import { Examples, Headline, Roll, TypeLine, flyTo, springs, useNow } from "./motion-kit";
+import { TicketRail, isoWeek, statusTone } from "./pass";
 
 type Product = {
   id: string;
@@ -207,6 +209,8 @@ export function Workbench({
     };
   }, [basketOpen]);
   const [added, setAdded] = useState("");
+  const [ask, setAsk] = useState("");
+  const now = useNow();
   useEffect(() => {
     try {
       localStorage.setItem(basketKey, JSON.stringify(basket));
@@ -246,7 +250,8 @@ export function Workbench({
       current = false;
     };
   }, [page, catalogQuery, offset]);
-  const add = (product: Product) => {
+  const add = (product: Product, photo?: Element | null) => {
+    flyTo(photo, document.querySelector(".work-basket-button"));
     setBasket((old) =>
       old.some((p) => p.id === product.id)
         ? old.map((p) =>
@@ -256,6 +261,7 @@ export function Workbench({
     );
     setAdded(product.id);
   };
+  const inBasket = (id: string) => basket.find((p) => p.id === id)?.quantity ?? 0;
   const changeQuantity = (id: string, delta: number) =>
     setBasket((old) =>
       old
@@ -286,25 +292,107 @@ export function Workbench({
       : page === "requests"
         ? t("Purchasing requests", "Hankintapyynnöt")
         : t("Purchasing overview", "Hankintojen yleiskatsaus");
+  // The overview opens with what the buyer has to do, not with a page title.
+  const mood = pending.length ? "approval" : active.length ? "working" : "clear";
+  const headline = pending.length
+    ? pending.length === 1
+      ? t("1 draft is waiting for your [approval].", "1 luonnos odottaa [hyväksyntääsi].")
+      : t(`${pending.length} drafts are waiting for your [approval].`, `${pending.length} luonnosta odottaa [hyväksyntääsi].`)
+    : active.length
+      ? active.length === 1
+        ? t("1 request is [in progress].", "1 pyyntö on [käsittelyssä].")
+        : t(`${active.length} requests are [in progress].`, `${active.length} pyyntöä on [käsittelyssä].`)
+      : t("Nothing needs your [approval].", "Mikään ei odota [hyväksyntääsi].");
+  const activityFor = (run: Run) =>
+    run.status === "running"
+      ? activityLabel(t, events.filter((e) => e.run_id === run.id).at(-1))
+      : undefined;
+  const language = locale === "fi" ? "fi-FI" : "en-GB";
+  const helsinki = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Helsinki" }));
+  const basketCount = basket.reduce((n, p) => n + p.quantity, 0);
   return (
     <>
-      <div className={page === "workspace" ? "work-heading work-heading--overview" : "work-heading"}>
+      <div className={page === "workspace" ? `work-heading work-heading--overview cs-hero mood-${mood}` : "work-heading"}>
         <div className="work-heading-content">
           <div>
-            {page === "workspace" && orderRehearsalAvailable && (
-              <span className="work-rehearsal-label">{valioStubMode
-                ? t("Rehearsal · simulated prices and stock", "Harjoitus · simuloidut hinnat ja varastosaldot")
-                : t("Order rehearsal enabled", "Tilausharjoitus käytössä")}</span>
+            {page === "workspace" && (
+              <p className="cs-dateline">
+                <span>
+                  {now.toLocaleDateString(language, {
+                    timeZone: "Europe/Helsinki",
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  })}
+                </span>
+                <span>
+                  {t("Week", "Viikko")} {isoWeek(helsinki)}
+                </span>
+                <span>
+                  Helsinki{" "}
+                  {now.toLocaleTimeString(language, {
+                    timeZone: "Europe/Helsinki",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                {orderRehearsalAvailable && (
+                  <span className="work-rehearsal-label">
+                    {valioStubMode
+                      ? t("Rehearsal · simulated prices and stock", "Harjoitus · simuloidut hinnat ja varastosaldot")
+                      : t("Order rehearsal enabled", "Tilausharjoitus käytössä")}
+                  </span>
+                )}
+              </p>
             )}
-            <h1>{title}</h1>
+            <Headline text={page === "workspace" ? headline : title} key={page === "workspace" ? headline : title} />
             <p>
               {page === "products"
                 ? t("Find products and build your next purchase.", "Etsi tuotteita ja suunnittele seuraava hankintasi.")
                 : page === "requests"
                   ? t("Follow every request, from search to your decision.", "Seuraa pyyntöjä tuotehausta päätökseen asti.")
-                  : t("Review approvals and plan your next kitchen purchase.", "Käsittele hyväksynnät ja suunnittele keittiösi seuraava hankinta.")}
+                  : mood === "approval"
+                    ? t("Review the draft below. Nothing is ordered until you allow it.", "Tarkista luonnos alla. Mitään ei tilata ennen kuin hyväksyt sen.")
+                    : mood === "working"
+                      ? <TypeLine text={activityFor(active[0]) ?? active[0].title} />
+                      : t("Review approvals and plan your next kitchen purchase.", "Käsittele hyväksynnät ja suunnittele keittiösi seuraava hankinta.")}
             </p>
           </div>
+          {page === "workspace" && (
+            <form
+              className="cs-ask"
+              onSubmit={(event) => {
+                event.preventDefault();
+                onAsk(ask.trim());
+                setAsk("");
+              }}
+            >
+              <AgentCharacter size="small" status={active[0]?.status} />
+              <div className="cs-ask-field">
+                <input
+                  aria-label={t("Ask the assistant", "Kysy avustajalta")}
+                  value={ask}
+                  onChange={(event) => setAsk(event.target.value)}
+                  maxLength={8000}
+                />
+                {!ask && (
+                  <span className="cs-ask-example" aria-hidden="true">
+                    <Examples
+                      phrases={[
+                        t("40 litres of lactose-free milk by Thursday", "40 litraa laktoositonta maitoa torstaiksi"),
+                        t("Crushed tomatoes for Friday", "Tomaattimurskaa perjantaiksi"),
+                        t("The best price on basmati rice", "Edullisin basmatiriisi"),
+                        t("Bread for 120 covers", "Leipää 120 hengelle"),
+                      ]}
+                    />
+                  </span>
+                )}
+              </div>
+              <button type="submit" aria-label={t("Ask the assistant", "Kysy avustajalta")}>
+                <ArrowRight size={18} />
+              </button>
+            </form>
+          )}
           <div className="work-heading-actions">
             {page === "products" ? (
               <button className="work-chat-button trade-motion-button" onClick={() => onAsk()}>
@@ -323,22 +411,33 @@ export function Workbench({
             >
               <ShoppingBasket size={19} />
               {t("Basket", "Ostoskori")}{" "}
-              <motion.b
-                key={basket.reduce((n, p) => n + p.quantity, 0)}
-                initial={reduced ? false : { scale: 1.35 }}
-                animate={{ scale: 1 }}
-              >
-                {basket.reduce((n, p) => n + p.quantity, 0)}
-              </motion.b>
+              <b>
+                <Roll value={basketCount} />
+              </b>
             </button>
           </div>
         </div>
         {page === "workspace" && (
           <div className="work-heading-image" aria-hidden="true">
             <img className="work-heading-photo" src={deliveryPhoto} alt="" fetchPriority="high" />
+            <span className="cs-note" key={mood}>
+              {mood === "approval"
+                ? t("waiting for you", "odottaa sinua")
+                : mood === "working"
+                  ? t("on it…", "työn alla…")
+                  : t("all clear", "kaikki kunnossa")}
+            </span>
           </div>
         )}
       </div>
+      {page === "workspace" && (
+        <TicketRail
+          runs={runs}
+          activityFor={activityFor}
+          onOpenRun={onOpenRun}
+          onViewAll={() => onPage("requests")}
+        />
+      )}
       {page === "workspace" && (
         <>
           <div className="work-overview-grid">
@@ -397,30 +496,6 @@ export function Workbench({
               </button>
             </section>
           </div>
-          {active.length > 0 && (
-            <section className="work-active">
-              <AgentCharacter size="small" status="running" />
-              <div>
-                <strong>
-                  {t(
-                    `${active.length} request${active.length === 1 ? "" : "s"} in progress`,
-                    `${active.length} käsittelyssä`,
-                  )}
-                </strong>
-                <p>
-                  {active[0].status === "running"
-                    ? activityLabel(
-                        t, events.filter((e) => e.run_id === active[0].id).at(-1),
-                      )
-                    : active[0].title}
-                </p>
-              </div>
-              <button onClick={() => onOpenRun(active[0].id)}>
-                {t("Follow task", "Seuraa tehtävää")}
-                <ArrowRight size={17} />
-              </button>
-            </section>
-          )}
           <ProfileRecommendations
             onSearch={(value) => {
               onQuery(value);
@@ -472,7 +547,14 @@ export function Workbench({
                     onQuery(q);
                   }}
                 >
-                  {t(name, finnish)}
+                  {query === q && (
+                    <motion.span
+                      className="cs-pill"
+                      layoutId="category-pill"
+                      transition={reduced ? { duration: 0 } : springs.panel}
+                    />
+                  )}
+                  <span>{t(name, finnish)}</span>
                 </button>
               ))}
             </div>
@@ -497,10 +579,27 @@ export function Workbench({
                 <article className="work-product-card" key={product.id}>
                   <div className="work-product-photo">
                     <CatalogPhoto product={product} />
+                    <AnimatePresence>
+                      {inBasket(product.id) > 0 && (
+                        <motion.span
+                          className="cs-in-basket"
+                          initial={reduced ? false : { scale: 0.4, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.4, opacity: 0 }}
+                          transition={springs.pop}
+                          aria-label={t(`${inBasket(product.id)} in basket`, `Korissa: ${inBasket(product.id)}`)}
+                        >
+                          <ShoppingBasket size={13} aria-hidden="true" />
+                          <Roll value={inBasket(product.id)} />
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                     <motion.button
                       whileTap={reduced ? undefined : { scale: 0.88 }}
                       className={added === product.id ? "product-added" : ""}
-                      onClick={() => add(product)}
+                      onClick={(event) =>
+                        add(product, event.currentTarget.parentElement?.querySelector("img"))
+                      }
                       aria-label={t(`Add ${product.name} to basket`, `Lisää koriin: ${product.name}`)}
                     >
                       {added === product.id ? (
@@ -536,23 +635,11 @@ export function Workbench({
           )}
         </section>
       )}
-      {(page === "workspace" || page === "requests") && (
+      {page === "requests" && (
         <section className="work-requests">
           <div className="work-section-heading">
-            <h2>
-              {page === "workspace" ? t("Recent requests", "Viimeisimmät pyynnöt") : t("Your requests", "Omat pyyntösi")}
-            </h2>
-            {page === "workspace" ? (
-              <button
-                className="work-text-button"
-                onClick={() => onPage("requests")}
-              >
-                {t("View all", "Näytä kaikki")}
-                <ArrowRight size={16} />
-              </button>
-            ) : (
-              <span>{t(`${filtered.length} recent requests`, `Pyyntöjä: ${filtered.length}`)}</span>
-            )}
+            <h2>{t("Your requests", "Omat pyyntösi")}</h2>
+            <span>{t(`${filtered.length} recent requests`, `Pyyntöjä: ${filtered.length}`)}</span>
           </div>
           {page === "requests" && (
             <div className="work-categories">
@@ -570,7 +657,14 @@ export function Workbench({
                     setTaskPage(0);
                   }}
                 >
-                  {name}
+                  {filter === value && (
+                    <motion.span
+                      className="cs-pill"
+                      layoutId="request-filter-pill"
+                      transition={reduced ? { duration: 0 } : springs.panel}
+                    />
+                  )}
+                  <span>{name}</span>
                 </button>
               ))}
             </div>
@@ -578,7 +672,7 @@ export function Workbench({
           <div className="work-request-grid">
             {visibleRuns.map((run) => (
               <button
-                className="work-request"
+                className={`work-request tone-${statusTone(run.status)}`}
                 key={run.id}
                 onClick={() => onOpenRun(run.id)}
               >
@@ -645,9 +739,10 @@ export function Workbench({
               role="dialog"
               aria-modal="true"
               aria-label={t("Planning basket", "Ostoskori")}
-              initial={reduced ? false : { x: 40 }}
+              initial={reduced ? false : { x: "100%" }}
               animate={{ x: 0 }}
-              exit={{ x: 40 }}
+              exit={reduced ? undefined : { x: "30%", opacity: 0 }}
+              transition={springs.panel}
             >
               <header>
                 <div>
@@ -662,8 +757,14 @@ export function Workbench({
                 </button>
               </header>
               <div className="work-basket-items">
+                <AnimatePresence initial={false}>
                 {basket.map((product) => (
-                  <article key={product.id}>
+                  <motion.article
+                    key={product.id}
+                    layout={reduced ? false : "position"}
+                    exit={reduced ? undefined : { opacity: 0, x: 24, transition: { duration: 0.18 } }}
+                    transition={springs.panel}
+                  >
                     <CatalogPhoto product={product} />
                     <div>
                       <strong>{product.name}</strong>
@@ -675,7 +776,9 @@ export function Workbench({
                         >
                           <Minus size={15} />
                         </button>
-                        <span>{product.quantity}</span>
+                        <span>
+                          <Roll value={product.quantity} />
+                        </span>
                         <button
                           aria-label={t(`Add one ${product.name}`, `Lisää yksi: ${product.name}`)}
                           onClick={() => changeQuantity(product.id, 1)}
@@ -684,8 +787,9 @@ export function Workbench({
                         </button>
                       </div>
                     </div>
-                  </article>
+                  </motion.article>
                 ))}
+                </AnimatePresence>
                 {!basket.length && (
                   <div className="work-empty">
                     <ShoppingBasket size={35} />

@@ -1,0 +1,1599 @@
+/* Workspace layer, loaded after trade.css.
+   Adds the signing-desk details to the Cosign system: pen strokes, handwritten
+   notes, request tickets, mono data. Colours come from the theme tokens, so
+   light and dark follow automatically.
+   Motion: interactions 120-240ms ease-out; one staged entrance per page;
+   nothing loops except a progress indicator while an agent is working. */
+.trade-app {
+  --cs-mono: "DM Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --cs-hand: "Caveat", "Segoe Print", cursive;
+  --cs-paper: light-dark(#fffdf6, #20201d);
+  --cs-paper-line: light-dark(#e3dcc6, #3d3c37);
+  --cs-marker: #ffe45c;
+  --cs-on-marker: #3a2f00;
+  --cs-pen: light-dark(#1c4fd7, #a4d9f5);
+  --cs-live: light-dark(#1f9d57, #6fdc9c);
+  --cs-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --cs-enter: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --cs-lift:
+    0 0 0 1px light-dark(#102f460f, #ffffff14),
+    0 1px 2px -1px light-dark(#102f4614, #00000066),
+    0 6px 14px light-dark(#102f460f, #00000059);
+}
+
+/* ---------- Motion primitives ---------- */
+@keyframes cs-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(8px);
+  }
+}
+@keyframes cs-wipe {
+  to {
+    /* Past the box on both sides: slanted handwriting overhangs its own width. */
+    clip-path: inset(-40% -18% -40% -6%);
+  }
+}
+@keyframes cs-note-in {
+  from {
+    opacity: 0;
+    transform: rotate(-12deg) scale(0.7);
+  }
+}
+@keyframes cs-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+.cs-headline {
+  text-wrap: balance;
+}
+.cs-word {
+  display: inline-block;
+  white-space: pre;
+  animation: cs-rise 0.8s var(--cs-enter) both;
+  animation-delay: calc(var(--i) * 80ms + 80ms);
+}
+.cs-enter {
+  animation: cs-rise 0.8s var(--cs-enter) both;
+  animation-delay: calc(var(--i) * 100ms + 240ms);
+}
+.cs-mark {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.cs-scribble {
+  position: absolute;
+  left: -2%;
+  bottom: -0.08em;
+  width: 104%;
+  height: 0.26em;
+  overflow: visible;
+  pointer-events: none;
+  clip-path: inset(-40% 100% -40% 0);
+  animation: cs-wipe 0.65s var(--cs-out) forwards;
+  animation-delay: calc(var(--n, 4) * 80ms + 520ms);
+}
+.cs-scribble path {
+  fill: none;
+  stroke: var(--cs-stroke, var(--highlight));
+  stroke-width: 5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.cs-roll {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+  vertical-align: bottom;
+  font-variant-numeric: tabular-nums;
+}
+.cs-roll > span {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* ---------- Top bar ---------- */
+.trade-app .trade-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--surface-raised) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+.trade-app .trade-header nav {
+  gap: 4px;
+  padding-bottom: 10px;
+}
+.trade-app .trade-header nav button {
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px 9px 11px;
+  border-radius: 999px;
+  font-weight: 600;
+  --cs-icon-surface: var(--surface-raised);
+  transition: color 0.16s var(--cs-out);
+}
+.trade-app .trade-header nav button[aria-current] {
+  color: var(--accent);
+  font-weight: 700;
+  --cs-icon-surface: var(--accent-soft);
+}
+.trade-app .work-nav-indicator {
+  inset: 0;
+  z-index: -1;
+  height: auto;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+.cs-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  overflow: visible;
+}
+.cs-icon-body {
+  fill: color-mix(in srgb, currentColor 14%, transparent);
+}
+.cs-icon-cover,
+.cs-icon-knob {
+  fill: var(--cs-icon-surface);
+}
+.trade-app .market-search {
+  box-shadow: inset 0 0 0 1.5px transparent;
+  transition:
+    background-color 0.16s var(--cs-out),
+    box-shadow 0.16s var(--cs-out);
+}
+.trade-app .market-search:focus-within {
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.trade-app .market-search input:focus-visible {
+  outline: none;
+}
+.market-search kbd {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--muted);
+  font: 500 12px/1 var(--cs-mono);
+}
+.market-search:focus-within kbd,
+.market-search:has(input:not(:placeholder-shown)) kbd {
+  display: none;
+}
+.trade-app .market-search button {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink);
+}
+.trade-app .header-chat-button,
+.trade-app .trade-header nav button,
+.trade-app .work-chat-button,
+.trade-app .work-basket-button,
+.trade-app .cs-ask > button,
+.trade-app .work-connect-clients button {
+  transition:
+    transform 0.12s var(--cs-out),
+    background-color 0.16s var(--cs-out),
+    border-color 0.16s var(--cs-out),
+    color 0.16s var(--cs-out);
+}
+.trade-app .header-chat-button:active,
+.trade-app .trade-header nav button:active,
+.trade-app .work-chat-button:active,
+.trade-app .work-basket-button:active,
+.trade-app .cs-ask > button:active,
+.trade-app .work-connect-clients button:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Overview hero ---------- */
+.trade-app .work-heading.cs-hero {
+  position: relative;
+  margin-bottom: 0;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  border-radius: 28px;
+  --cs-stroke: var(--highlight);
+}
+.trade-app .cs-hero.mood-approval {
+  --cs-stroke: var(--cs-marker);
+}
+.trade-app .cs-hero .work-heading-content {
+  gap: 22px;
+  padding-bottom: calc(clamp(26px, 4.5vw, 70px) + 34px);
+}
+.cs-dateline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 20px;
+  font: 500 12px/1.2 var(--cs-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  animation: cs-rise 0.8s var(--cs-enter) both;
+}
+.trade-app .cs-hero .cs-dateline {
+  color: var(--hero-muted);
+  font-size: 12px;
+}
+.cs-dateline > span:not(.work-rehearsal-label) + span:not(.work-rehearsal-label)::before {
+  content: "·";
+  margin-right: 12px;
+  opacity: 0.55;
+}
+.cs-dateline .work-rehearsal-label {
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.trade-app .work-heading.cs-hero h1 {
+  max-width: 15ch;
+  margin-bottom: 14px;
+  font-size: clamp(42px, 4.5vw, 70px);
+  line-height: 0.98;
+}
+.trade-app .cs-hero .work-heading-content > div:first-child > p:last-child {
+  min-height: 1.5em;
+  font-size: 15px;
+  animation: cs-rise 0.8s var(--cs-enter) both 0.5s;
+}
+.cs-ask {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 540px);
+  height: 58px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--on-hero) 24%, transparent);
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 12px 30px #00000033;
+  animation: cs-rise 0.8s var(--cs-enter) both 0.6s;
+}
+.cs-ask:focus-within {
+  outline: 3px solid var(--highlight);
+  outline-offset: 3px;
+}
+.trade-app .cs-ask .agent-character {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--highlight);
+}
+.cs-ask-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.trade-app .cs-ask input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 550;
+}
+.trade-app .cs-ask input:focus-visible {
+  outline: none;
+}
+.cs-ask-example {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 15px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.trade-app .cs-ask > button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--action);
+  color: var(--on-action);
+}
+.trade-app .cs-hero .work-heading-actions {
+  animation: cs-rise 0.8s var(--cs-enter) both 0.7s;
+}
+.trade-app .work-basket-button b {
+  overflow: hidden;
+  font: 500 12px/1 var(--cs-mono);
+}
+.work-heading-image {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+.trade-app .cs-hero .work-heading-photo {
+  max-height: none;
+  animation: cs-photo-in 1.1s var(--cs-out) both;
+}
+@keyframes cs-photo-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+.cs-note {
+  position: absolute;
+  right: clamp(16px, 2.4vw, 34px);
+  top: clamp(16px, 2.4vw, 32px);
+  padding: 8px 18px 11px;
+  border-radius: 3px 14px 5px 12px;
+  background: var(--highlight);
+  color: var(--on-highlight);
+  font: 700 clamp(26px, 2.5vw, 36px) / 1 var(--cs-hand);
+  box-shadow: 0 8px 18px #0000003d;
+  transform: rotate(-4deg);
+  transform-origin: 70% 0;
+  animation: cs-note-in 0.5s var(--cs-out) both 1s;
+}
+.mood-approval .cs-note {
+  background: var(--cs-marker);
+  color: var(--cs-on-marker);
+}
+.mood-working .cs-note {
+  background: #fff;
+  color: #102f46;
+}
+
+/* ---------- Ticket rail ---------- */
+.cs-rail {
+  position: relative;
+  z-index: 2;
+  margin: -46px 0 30px;
+}
+.cs-rail-bar {
+  position: absolute;
+  top: 0;
+  left: clamp(14px, 2.2vw, 34px);
+  right: clamp(14px, 2.2vw, 34px);
+  height: 6px;
+  border-radius: 3px;
+  background: light-dark(#dfe9f2, #4a4a4a);
+  box-shadow:
+    0 1px 0 #ffffff59 inset,
+    0 3px 6px #00000033;
+}
+.cs-rail-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 3px clamp(26px, 3.4vw, 54px) 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.cs-rail-track::-webkit-scrollbar {
+  display: none;
+}
+.trade-app .cs-ticket {
+  position: relative;
+  flex: 0 0 240px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  transform-origin: 50% 0;
+  filter: drop-shadow(0 1px 1px #00000024) drop-shadow(0 10px 14px light-dark(#0b2a4029, #00000080));
+}
+.trade-app button.cs-ticket:focus-visible {
+  outline-offset: 6px;
+}
+.cs-ticket-peg {
+  position: absolute;
+  z-index: 1;
+  top: -8px;
+  left: 50%;
+  width: 18px;
+  height: 20px;
+  margin-left: -9px;
+  border-radius: 4px 4px 6px 6px;
+  background: light-dark(#152e43, #d9d9d9);
+  box-shadow: 0 2px 3px #0000004d;
+}
+.cs-ticket-paper {
+  --zig: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px 16px 22px;
+  background: var(--cs-paper);
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--zig)) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--zig)) 100%;
+}
+.cs-ticket-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 9px;
+  border-bottom: 1px dashed var(--cs-paper-line);
+  color: var(--muted);
+  font: 500 10.5px/1.2 var(--cs-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cs-ticket strong {
+  display: -webkit-box;
+  min-height: 2.6em;
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.cs-ticket-meta {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.cs-ticket-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+  margin-top: 2px;
+}
+.cs-ticket-status {
+  padding: 5px 7px;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--muted);
+  font: 500 10.5px/1 var(--cs-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tone-wait .cs-ticket-status {
+  background: var(--cs-marker);
+  color: var(--cs-on-marker);
+}
+.tone-work .cs-ticket-status {
+  background: var(--info-surface);
+  color: var(--accent);
+}
+.tone-done .cs-ticket-status {
+  background: var(--success-surface);
+  color: var(--success);
+}
+.tone-stop .cs-ticket-status {
+  background: var(--danger-surface);
+  color: var(--danger);
+}
+.cs-ticket-total {
+  font: 500 13px/1 var(--cs-mono);
+  font-variant-numeric: tabular-nums;
+}
+.cs-ticket-live {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 11.5px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cs-ticket-sign {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 30px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 55%, transparent);
+}
+.cs-ticket-sign i {
+  padding-bottom: 3px;
+  color: var(--muted);
+  font: 500 11px/1 var(--cs-mono);
+}
+.cs-ticket-sign em {
+  position: absolute;
+  left: 26px;
+  bottom: 1px;
+  padding-right: 0.3em;
+  color: var(--cs-pen);
+  font: 700 27px/1 var(--cs-hand);
+  white-space: nowrap;
+  transform: rotate(-4deg);
+  transform-origin: 0 100%;
+  clip-path: inset(-40% 100% -40% -6%);
+  animation: cs-wipe 0.6s var(--cs-out) forwards 0.9s;
+}
+.cs-ticket--note strong {
+  min-height: 0;
+}
+.cs-ticket--ghost {
+  height: 148px;
+  border: 1.5px dashed color-mix(in srgb, var(--ink) 20%, transparent) !important;
+  border-radius: 6px;
+  filter: none !important;
+}
+.trade-app .cs-rail-more {
+  flex: none;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 6px;
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ---------- Overview sections ---------- */
+.trade-app .work-today,
+.trade-app .work-connect {
+  border-radius: 24px;
+}
+.trade-app .work-all-clear svg {
+  width: 54px;
+  height: 54px;
+  padding: 13px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+}
+.trade-app .work-all-clear h3 {
+  margin-top: 12px;
+  font-size: 17px;
+}
+.trade-app .work-connect-clients button > svg {
+  transition: transform 0.16s var(--cs-out);
+}
+.trade-app .work-product-photo {
+  border-radius: 18px;
+  outline: 1px solid light-dark(#0000000f, #ffffff1a);
+  outline-offset: -1px;
+}
+.trade-app .work-product-photo > button {
+  right: 10px;
+  bottom: 10px;
+}
+.trade-app .work-product-card > small {
+  font: 500 10.5px/1.2 var(--cs-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.trade-app .work-product-card > p {
+  font-family: var(--cs-mono);
+  font-size: 11.5px;
+}
+.trade-app .work-section-heading span {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Assistant drawer ---------- */
+.trade-app .market-drawer {
+  animation: none;
+  box-shadow: -18px 0 60px light-dark(#0b2a4033, #000000b3);
+}
+.trade-app .market-scrim {
+  background: light-dark(#0b243766, #000000a6);
+  backdrop-filter: blur(1.5px);
+}
+.cs-live {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.cs-live i {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warning);
+}
+.cs-live.is-live i {
+  background: var(--cs-live);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cs-live) 24%, transparent);
+}
+.trade-app .chat-user-message p {
+  background: var(--action);
+  color: var(--on-action);
+  font-size: 14px;
+}
+.trade-app .chat-welcome {
+  padding-top: 44px;
+}
+.trade-app .chat-welcome .agent-character {
+  width: 62px;
+  height: 62px;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background: var(--highlight);
+  animation: cs-rise 0.7s var(--cs-enter) both;
+}
+.trade-app .chat-welcome h3 {
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  animation: cs-rise 0.7s var(--cs-enter) both 0.08s;
+}
+.cs-welcome-sub {
+  max-width: 46ch;
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+  animation: cs-rise 0.7s var(--cs-enter) both 0.16s;
+}
+.trade-app .chat-welcome .agent-starters > button {
+  animation: cs-rise 0.7s var(--cs-enter) both 0.24s;
+}
+.trade-app .chat-welcome .agent-starters > button + button {
+  animation-delay: 0.32s;
+}
+.trade-app .agent-starters > button > svg:last-child {
+  transition: transform 0.16s var(--cs-out);
+}
+.trade-app .chat-working {
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 0;
+  overflow: visible;
+  background: transparent;
+}
+.trade-app .chat-working::after {
+  display: none;
+}
+.cs-shimmer {
+  background: linear-gradient(90deg, var(--muted) 0 38%, var(--ink) 50%, var(--muted) 62% 100%) 0 0 /
+    260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  animation: cs-shimmer 1.9s linear infinite;
+}
+.cs-status {
+  display: inline-block;
+  animation: cs-rise 0.35s var(--cs-enter) both;
+}
+.cs-elapsed {
+  color: var(--muted);
+  font: 500 12px/1 var(--cs-mono);
+  font-variant-numeric: tabular-nums;
+}
+.trade-app .drawer-compose form {
+  border-radius: 22px;
+  background: var(--surface);
+  transition:
+    border-color 0.16s var(--cs-out),
+    box-shadow 0.16s var(--cs-out);
+}
+.trade-app .drawer-compose form:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.trade-app .drawer-compose textarea {
+  min-height: 58px;
+  background: transparent;
+  resize: none;
+  field-sizing: content;
+}
+.trade-app .drawer-compose textarea:focus-visible {
+  outline: none;
+}
+.trade-app .drawer-compose .trade-compose-footer {
+  border-top: 0;
+  padding: 4px 8px 8px 16px;
+}
+.trade-app .drawer-compose .trade-compose-footer .button {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+.trade-app .drawer-compose .trade-compose-footer .button span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.cs-compose-hint {
+  display: block;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* ---------- Footer ---------- */
+.trade-app .trade-footer {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  color: var(--on-hero);
+}
+.cs-footer {
+  max-width: 1600px;
+  margin: auto;
+  padding: clamp(36px, 5vw, 72px) 3vw 26px;
+}
+.cs-footer-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 40px;
+  align-items: start;
+}
+.cs-footer-pitch p {
+  max-width: 14ch;
+  margin-top: 22px;
+  font: 700 clamp(34px, 3.8vw, 58px) / 0.98 var(--font-display);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.cs-footer nav {
+  display: flex;
+  gap: clamp(28px, 4vw, 72px);
+}
+.cs-footer nav h3 {
+  margin: 0 0 12px;
+  color: var(--hero-muted);
+  font: 500 11px/1.2 var(--cs-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cs-footer nav ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.trade-app .cs-footer nav button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--on-hero);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+.cs-footer nav button svg {
+  opacity: 0;
+  transform: translate(-4px, 4px);
+  transition:
+    opacity 0.16s var(--cs-out),
+    transform 0.16s var(--cs-out);
+}
+.trade-app .cs-footer button:focus-visible {
+  outline-color: var(--on-hero);
+}
+.cs-footer-status {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: clamp(30px, 4vw, 56px) 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--on-hero) 22%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--on-hero) 22%, transparent);
+}
+.cs-footer-status > div {
+  padding: 16px 18px 16px 0;
+}
+.cs-footer-status > div + div {
+  padding-left: 18px;
+  border-left: 1px solid color-mix(in srgb, var(--on-hero) 22%, transparent);
+}
+.cs-footer-status dt {
+  color: var(--hero-muted);
+  font: 500 11px/1.2 var(--cs-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cs-footer-status dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0 0;
+  overflow: hidden;
+  font: 500 14px/1.3 var(--cs-mono);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cs-footer-status dd i {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cs-marker);
+}
+.cs-footer-status .is-live i {
+  background: #6fdc9c;
+  box-shadow: 0 0 0 3px #6fdc9c40;
+}
+.cs-footer-sign {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: clamp(26px, 4vw, 60px);
+  border-bottom: 2px solid color-mix(in srgb, var(--on-hero) 60%, transparent);
+  --cs-stroke: var(--highlight);
+}
+.cs-footer-sign i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding-bottom: clamp(10px, 1.6vw, 24px);
+  color: var(--hero-muted);
+  font: 500 clamp(18px, 2.2vw, 34px) / 1 var(--cs-mono);
+}
+.cs-footer-sign span {
+  display: block;
+  margin-bottom: -0.16em;
+  color: var(--highlight);
+  font: 700 clamp(120px, 23vw, 380px) / 0.86 var(--cs-hand);
+  letter-spacing: -0.02em;
+  transform: rotate(-3deg);
+  transform-origin: 50% 100%;
+  clip-path: inset(-30% 100% -30% -5%);
+}
+.cs-footer-sign[data-written] span {
+  animation: cs-wipe 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.cs-footer-sign .cs-scribble {
+  left: 31%;
+  bottom: -0.5em;
+  width: 38%;
+  height: 0.5em;
+  font-size: clamp(30px, 5vw, 80px);
+  animation: none;
+}
+.cs-footer-sign[data-written] .cs-scribble {
+  animation: cs-wipe 0.7s var(--cs-out) forwards 1.35s;
+}
+.cs-footer-sign .cs-scribble path {
+  stroke-width: 4;
+}
+.cs-footer-base {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: clamp(30px, 5vw, 70px);
+  color: var(--hero-muted);
+  font: 500 12px/1.4 var(--cs-mono);
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Controls: every press, selection and opening eases the same way ---------- */
+.trade-app button:not(.market-scrim):not(.work-basket-scrim),
+.trade-app .button,
+.trade-app .mcp-open-client {
+  transition:
+    transform 0.12s var(--cs-out),
+    background-color 0.16s var(--cs-out),
+    border-color 0.16s var(--cs-out),
+    color 0.16s var(--cs-out),
+    box-shadow 0.2s var(--cs-out),
+    opacity 0.16s var(--cs-out);
+}
+/* These are moved by the motion library; a CSS transition on transform would fight it. */
+.trade-app .cs-ticket,
+.trade-app .work-product-photo > button {
+  transition-property: background-color, border-color, color, box-shadow, opacity;
+}
+.trade-app button:not(.market-scrim):not(.work-basket-scrim):not(.cs-ticket):active:not(:disabled) {
+  transform: scale(0.97);
+}
+.trade-app input,
+.trade-app textarea,
+.trade-app select {
+  transition:
+    border-color 0.16s var(--cs-out),
+    box-shadow 0.16s var(--cs-out),
+    background-color 0.16s var(--cs-out);
+}
+.trade-app select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a8b9a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 15px;
+}
+.trade-app select:hover {
+  border-color: var(--accent);
+}
+
+/* A selection slides to its new place instead of jumping. */
+.cs-pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--action);
+}
+.trade-app .work-categories button {
+  position: relative;
+  isolation: isolate;
+  padding: 11px 18px;
+  font-weight: 600;
+}
+.trade-app .work-categories button[aria-pressed="true"] {
+  background: var(--info-surface);
+  color: var(--on-action);
+}
+.trade-app .mcp-clients > button {
+  isolation: isolate;
+}
+.trade-app .mcp-clients > button[aria-pressed="true"] {
+  background: transparent;
+  box-shadow: none;
+}
+.trade-app .mcp-clients .cs-pill {
+  background: var(--accent-soft);
+  box-shadow: inset 0 -3px var(--accent);
+}
+
+/* Menus and dialogs grow from where they were opened. */
+.display-preferences-chevron {
+  transition: transform 0.2s var(--cs-out);
+}
+.display-preferences-trigger[aria-expanded="true"] .display-preferences-chevron {
+  transform: rotate(180deg);
+}
+.display-preferences .display-preferences-panel {
+  transform-origin: top right;
+  transition:
+    opacity 0.16s var(--cs-out),
+    transform 0.2s var(--cs-out);
+  transition:
+    opacity 0.16s var(--cs-out),
+    transform 0.2s var(--cs-out),
+    display 0.2s allow-discrete;
+}
+.display-preferences .display-preferences-panel[hidden] {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+}
+@starting-style {
+  .display-preferences .display-preferences-panel:not([hidden]) {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}
+.trade-intake[open] {
+  transition:
+    opacity 0.2s var(--cs-out),
+    transform 0.28s var(--cs-out);
+}
+.trade-intake[open]::backdrop {
+  backdrop-filter: blur(1.5px);
+  transition: background-color 0.25s var(--cs-out);
+}
+@starting-style {
+  .trade-intake[open] {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  .trade-intake[open]::backdrop {
+    background-color: transparent;
+  }
+}
+.trade-app {
+  interpolate-size: allow-keywords;
+}
+.trade-app details::details-content {
+  block-size: 0;
+  overflow: clip;
+  opacity: 0;
+  transition:
+    block-size 0.3s var(--cs-out),
+    opacity 0.2s var(--cs-out),
+    content-visibility 0.3s allow-discrete;
+}
+.trade-app details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+.trade-app summary {
+  cursor: pointer;
+}
+@keyframes cs-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+    filter: blur(3px);
+  }
+}
+.trade-app .chat-brief > .agent-markdown,
+.trade-app .mcp-copy > small {
+  animation: cs-rise 0.3s var(--cs-enter) both;
+}
+.trade-app .mcp-copy-value > button svg,
+.trade-app .work-product-photo > button svg {
+  animation: cs-pop 0.22s var(--cs-out) both;
+}
+.trade-app .chat-brief > button svg,
+.trade-app .agent-see-more svg {
+  transition: transform 0.2s var(--cs-out);
+}
+.trade-app .chat-brief > button[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.cs-in-basket {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px 5px 7px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font: 500 12px/1 var(--cs-mono);
+  box-shadow: var(--cs-lift);
+}
+.trade-app .work-quantity span {
+  min-width: 2ch;
+  font: 500 13px/1 var(--cs-mono);
+  text-align: center;
+}
+.trade-app .work-basket-scrim {
+  background: light-dark(#0b243766, #000000a6);
+  backdrop-filter: blur(1.5px);
+}
+
+/* ---------- Requests page ---------- */
+.trade-app .work-request {
+  padding: 16px 18px;
+  border-radius: 18px;
+}
+.trade-app .work-request strong {
+  font-size: 14.5px;
+}
+.trade-app .work-request p {
+  font-size: 12px;
+}
+.trade-app .work-request .trade-status {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font: 500 10.5px/1 var(--cs-mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.trade-app .work-request.tone-wait .trade-status {
+  background: var(--cs-marker);
+  color: var(--cs-on-marker);
+}
+.trade-app .work-request.tone-work .trade-status {
+  background: var(--info-surface);
+  color: var(--accent);
+}
+.trade-app .work-request.tone-done .trade-status {
+  background: var(--success-surface);
+  color: var(--success);
+}
+.trade-app .work-request.tone-stop .trade-status {
+  background: var(--danger-surface);
+  color: var(--danger);
+}
+.trade-app .work-request.tone-wait .request-symbol {
+  background: var(--cs-marker);
+  color: var(--cs-on-marker);
+}
+.trade-app .work-request.tone-stop .request-symbol {
+  background: var(--danger-surface);
+  color: var(--danger);
+}
+.trade-app .work-request.tone-work .request-symbol {
+  color: var(--accent);
+}
+.trade-app .work-request > svg:last-child {
+  color: var(--muted);
+  transition: transform 0.16s var(--cs-out);
+}
+.trade-app .work-section-heading > span {
+  font-family: var(--cs-mono);
+}
+
+/* ---------- Settings: the limit is the headline, the rules are switches ---------- */
+.trade-app .trade-settings.cs-rules {
+  max-width: 1180px;
+  margin: 6px auto 60px;
+}
+.cs-rules-head {
+  margin-bottom: 30px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--line);
+}
+.trade-app .cs-rules-head h1,
+.trade-app .mcp-intro h1 {
+  margin: 6px 0 14px;
+  font: 700 clamp(40px, 5vw, 70px) / 0.96 var(--font-display);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  animation: cs-rise 0.7s var(--cs-enter) both;
+}
+.cs-rules-head p {
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+  animation: cs-rise 0.7s var(--cs-enter) both 0.1s;
+}
+.cs-rules-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.cs-limit {
+  position: sticky;
+  top: 132px;
+  padding: 26px;
+  border-radius: 24px;
+  background: var(--hero);
+  color: var(--on-hero);
+  animation: cs-rise 0.7s var(--cs-enter) both 0.18s;
+}
+.trade-app .cs-limit label {
+  gap: 16px;
+  color: var(--hero-muted);
+  font: 500 11px/1.4 var(--cs-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cs-limit-field {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid color-mix(in srgb, var(--on-hero) 40%, transparent);
+  transition: border-color 0.16s var(--cs-out);
+}
+.cs-limit-field:focus-within {
+  border-color: var(--highlight);
+}
+.cs-limit-field > span {
+  color: var(--hero-muted);
+  font: 700 40px/1 var(--font-display);
+}
+.trade-app .cs-limit-field input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--on-hero);
+  font: 700 clamp(48px, 5vw, 70px) / 1 var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.cs-limit-field input::-webkit-outer-spin-button,
+.cs-limit-field input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+.trade-app .cs-limit-field input:focus-visible {
+  outline: none;
+}
+.cs-limit-state {
+  margin: 18px 0 10px;
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.4;
+  animation: cs-rise 0.35s var(--cs-enter) both;
+}
+.cs-limit .trade-muted {
+  color: var(--hero-muted);
+}
+.cs-rules-lists {
+  display: grid;
+  gap: 30px;
+  animation: cs-rise 0.7s var(--cs-enter) both 0.26s;
+}
+.trade-app .cs-rules fieldset {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.trade-app .cs-rules legend {
+  float: left;
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 0 0 6px;
+  font: 700 22px/1.15 var(--font-display);
+  letter-spacing: -0.005em;
+}
+.trade-app .cs-rules .trade-checkbox {
+  position: relative;
+  gap: 10px;
+  min-height: 46px;
+  padding: 10px 14px 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-raised);
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    transform 0.12s var(--cs-out),
+    border-color 0.16s var(--cs-out),
+    background-color 0.16s var(--cs-out);
+}
+.trade-app .cs-rules .trade-checkbox:active {
+  transform: scale(0.98);
+}
+.trade-app .cs-rules .trade-checkbox:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 650 !important;
+}
+.trade-app .cs-rules .trade-checkbox:has(input:focus-visible) {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.trade-app .cs-rules .trade-checkbox input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  appearance: none;
+  cursor: pointer;
+}
+.trade-app .cs-rules .trade-checkbox input:focus-visible {
+  outline: none;
+}
+.trade-app .cs-rules .trade-checkbox input:checked {
+  border-color: var(--action);
+  background: var(--action);
+}
+.trade-app .cs-rules .trade-checkbox::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  width: 14px;
+  height: 14px;
+  background: var(--on-action);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  translate: 0 -50%;
+  scale: 0;
+  pointer-events: none;
+  transition: scale 0.2s var(--cs-out);
+}
+.trade-app .cs-rules .trade-checkbox:has(input:checked)::after {
+  scale: 1;
+}
+.cs-rules-save {
+  position: sticky;
+  bottom: 18px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 34px;
+  padding: 10px 18px 10px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  box-shadow: var(--cs-lift);
+  transition:
+    border-color 0.2s var(--cs-out),
+    box-shadow 0.2s var(--cs-out);
+}
+.cs-rules-save[data-dirty] {
+  border-color: var(--cs-marker);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--cs-marker) 55%, transparent),
+    var(--cs-lift);
+}
+.cs-rules-save p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  animation: cs-rise 0.35s var(--cs-enter) both;
+}
+.cs-rules-saved {
+  color: var(--success);
+}
+.cs-rules-save:not(:has(p)) {
+  padding-right: 10px;
+}
+
+/* ---------- Connections ---------- */
+.trade-app .trade-settings.mcp-settings {
+  max-width: 1040px;
+}
+.trade-app .mcp-intro p {
+  font-size: 15px;
+  animation: cs-rise 0.7s var(--cs-enter) both 0.1s;
+}
+.trade-app .mcp-install {
+  border-radius: 24px;
+  animation: cs-rise 0.7s var(--cs-enter) both 0.18s;
+}
+.trade-app .mcp-guide > * {
+  animation: cs-rise 0.45s var(--cs-enter) both;
+}
+.trade-app .mcp-guide > :nth-child(2) {
+  animation-delay: 0.05s;
+}
+.trade-app .mcp-guide > :nth-child(n + 3) {
+  animation-delay: 0.1s;
+}
+.trade-app .mcp-copy-value code,
+.trade-app .mcp-hosted p {
+  font-family: var(--cs-mono);
+}
+.trade-app .mcp-copy-value > button:hover {
+  border-color: var(--accent);
+}
+
+@media (hover: hover) {
+  .trade-app .work-request:hover {
+    transform: none;
+    box-shadow: var(--cs-lift);
+  }
+  .trade-app .work-request:hover > svg:last-child {
+    transform: translate(2px, -2px);
+  }
+  .trade-app .cs-rules .trade-checkbox:hover {
+    border-color: var(--line-strong);
+  }
+  .trade-app .cs-rules .trade-checkbox:has(input:checked):hover {
+    border-color: var(--accent);
+  }
+  .trade-app .work-categories button:not([aria-pressed="true"]):hover {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+}
+@media (max-width: 900px) {
+  .cs-rules-grid {
+    grid-template-columns: 1fr;
+  }
+  .cs-limit {
+    position: static;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trade-app .cs-rules-head h1,
+  .trade-app .mcp-intro h1,
+  .cs-rules-head p,
+  .cs-limit,
+  .cs-limit-state,
+  .cs-rules-lists,
+  .cs-rules-save p,
+  .trade-app .mcp-intro p,
+  .trade-app .mcp-install,
+  .trade-app .mcp-guide > *,
+  .trade-app .chat-brief > .agent-markdown,
+  .trade-app .mcp-copy > small,
+  .trade-app .mcp-copy-value > button svg,
+  .trade-app .work-product-photo > button svg {
+    animation: none;
+  }
+  .trade-app details::details-content,
+  .display-preferences .display-preferences-panel,
+  .trade-intake[open] {
+    transition: none;
+  }
+}
+
+/* ---------- Pointer-only feedback (touch screens fire hover on tap) ---------- */
+@media (hover: hover) {
+  .trade-app .trade-header nav button:not([aria-current]):hover {
+    color: var(--ink);
+  }
+  .trade-app .market-search button:hover {
+    background: var(--accent-soft);
+  }
+  .trade-app .cs-ask > button:hover {
+    background: var(--action-hover);
+  }
+  .trade-app .work-connect-clients button:hover > svg,
+  .trade-app .agent-starters > button:hover > svg:last-child {
+    transform: translate(2px, -2px);
+  }
+  .trade-app .cs-rail-more:hover {
+    border-color: var(--line-strong);
+  }
+  .cs-footer nav button:hover svg {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Smaller screens ---------- */
+@media (max-width: 1100px) {
+  .cs-footer-top {
+    grid-template-columns: 1fr;
+  }
+  .cs-footer-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cs-footer-status > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .cs-footer-status > div:nth-child(n + 3) {
+    border-top: 1px solid color-mix(in srgb, var(--on-hero) 22%, transparent);
+  }
+}
+@media (max-width: 700px) {
+  .trade-app .trade-header {
+    position: static;
+    backdrop-filter: none;
+  }
+  .trade-app .trade-header nav {
+    gap: 2px;
+    padding-bottom: 8px;
+  }
+  .trade-app .trade-header nav button {
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 2px 8px;
+    border-radius: 14px;
+  }
+  .trade-app .work-nav-indicator {
+    border-radius: 14px;
+  }
+  .market-search kbd {
+    display: none;
+  }
+  .trade-app .work-heading.cs-hero {
+    grid-template-columns: 1fr;
+    border-radius: 22px;
+  }
+  .trade-app .work-heading.cs-hero h1 {
+    max-width: none;
+    font-size: clamp(36px, 10vw, 50px);
+  }
+  .trade-app .cs-hero .work-heading-content {
+    padding-bottom: 26px;
+  }
+  .trade-app .cs-hero .work-heading-image {
+    height: 220px;
+  }
+  .cs-dateline {
+    margin-bottom: 14px;
+    font-size: 11px;
+  }
+  .cs-dateline > span:nth-child(3) {
+    display: none;
+  }
+  .cs-ask {
+    height: 52px;
+  }
+  .trade-app .cs-ask input,
+  .cs-ask-example {
+    font-size: 14px;
+  }
+  .cs-note {
+    font-size: 26px;
+  }
+  .cs-rail {
+    margin: -40px -16px 22px;
+  }
+  .cs-rail-track {
+    gap: 14px;
+    padding-inline: 22px;
+    scroll-snap-type: x proximity;
+  }
+  .trade-app .cs-ticket {
+    flex-basis: 220px;
+    scroll-snap-align: center;
+  }
+  .cs-compose-hint {
+    display: none;
+  }
+  .cs-footer {
+    padding: 32px 18px 96px;
+  }
+  .cs-footer nav {
+    flex-wrap: wrap;
+    gap: 22px 34px;
+  }
+  .cs-footer-status {
+    grid-template-columns: 1fr;
+  }
+  .cs-footer-status > div,
+  .cs-footer-status > div + div {
+    padding: 13px 0;
+    border-left: 0;
+    border-top: 0;
+  }
+  .cs-footer-status > div + div {
+    border-top: 1px solid color-mix(in srgb, var(--on-hero) 22%, transparent);
+  }
+  .cs-footer-base {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cs-word,
+  .cs-enter,
+  .cs-dateline,
+  .cs-ask,
+  .cs-note,
+  .cs-shimmer,
+  .cs-status,
+  .trade-app .cs-hero .work-heading-actions,
+  .trade-app .cs-hero .work-heading-photo,
+  .trade-app .cs-hero .work-heading-content > div:first-child > p:last-child,
+  .trade-app .chat-welcome .agent-character,
+  .trade-app .chat-welcome h3,
+  .cs-welcome-sub,
+  .trade-app .chat-welcome .agent-starters > button {
+    animation: none;
+  }
+  .cs-shimmer {
+    color: var(--ink);
+    background: none;
+  }
+  .cs-scribble,
+  .cs-ticket-sign em,
+  .cs-footer-sign span,
+  .cs-footer-sign[data-written] span,
+  .cs-footer-sign[data-written] .cs-scribble {
+    clip-path: none;
+    animation: none;
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { ArrowUpRight, Check, Copy, Link2, ShieldCheck, Unplug } from "lucide-react";
 import { Button } from "../components/ui";
 import { CosignWordmark } from "../components/CoSignBrand";
@@ -125,6 +126,7 @@ export function Connections({
 
 function ClientInstall({ mcpUrl, initialClient }: { mcpUrl: string; initialClient: AgentClient }) {
   const { t } = useI18n();
+  const reduced = useReducedMotion();
   const [client, setClient] = useState<AgentClient>(initialClient);
   const selected = clients[client];
   const clientName = agentClients[client];
@@ -140,6 +142,14 @@ function ClientInstall({ mcpUrl, initialClient }: { mcpUrl: string; initialClien
       <div className="mcp-clients" role="group" aria-label={t("Choose your assistant", "Valitse avustaja")}>
         {(Object.keys(agentClients) as AgentClient[]).map((id) => (
           <button key={id} type="button" onClick={() => setClient(id)} aria-pressed={id === client}>
+            {id === client && (
+              <motion.span
+                aria-hidden="true"
+                className="cs-pill"
+                layoutId="mcp-client-pill"
+                transition={reduced ? { duration: 0 } : { type: "spring", duration: 0.45, bounce: 0 }}
+              />
+            )}
             <span className="mcp-client-icon"><BrandIcon brand={id} /></span>
             <span className="mcp-client-label">
               <strong>{agentClientLabel(id, t)}</strong>

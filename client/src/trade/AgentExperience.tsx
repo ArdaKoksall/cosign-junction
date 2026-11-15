@@ -18,6 +18,7 @@ import { allergenLabel, productRequirementLabel } from "../productRequirements";
 import type { ProductRequirement } from "../types";
 import { DeliverySummary, ProductDeliveryEstimate, PurchaseCard } from "./PurchaseCard";
 import { motion, useReducedMotion } from "motion/react";
+import { useElapsed } from "./motion-kit";
 import { isDeliveryMode, type Run, type TradeEvent } from "./api";
 import { activityLabel, runStatusLabel, tradeMessage } from "./tradeCopy";
 import { formatHelsinkiTime } from "../helsinkiTime";
@@ -659,6 +660,30 @@ function RequestHistory({ events }: { events: TradeEvent[] }) {
   );
 }
 
+/** What the agent is doing right now, and for how long, in one quiet line. */
+function WorkingStatus({
+  label,
+  stopLabel,
+  onStop,
+}: {
+  label: string;
+  stopLabel: string;
+  onStop?: () => void;
+}) {
+  const seconds = useElapsed(true);
+  return (
+    <div className="chat-working" role="status">
+      <span className="cs-status" key={label}>
+        <span className="cs-shimmer">{label}</span>
+      </span>
+      <span className="cs-elapsed" aria-hidden="true">
+        {seconds}s
+      </span>
+      {onStop && <button onClick={onStop}>{stopLabel}</button>}
+    </div>
+  );
+}
+
 export function AgentExperience({
   run,
   events,
@@ -740,6 +765,12 @@ export function AgentExperience({
         <div className="chat-welcome">
           <AgentCharacter size="small" />
           <h3>{t("What can I help you find?", "Mitä haluaisit löytää?")}</h3>
+          <p className="cs-welcome-sub">
+            {t(
+              "I search the catalog, compare prices and stock, and prepare drafts. Purchases follow your account’s approval rules.",
+              "Haen tuotteita, vertaan hintoja ja saatavuutta ja valmistelen luonnoksia. Hankinnoissa noudatetaan tilisi hyväksyntäsääntöjä.",
+            )}
+          </p>
           <div className="agent-starters">
             <button
               onClick={() =>
@@ -852,19 +883,15 @@ export function AgentExperience({
                   />
                 )}
                 {working && (
-                  <div className="chat-working" role="status">
-                    <span className="chat-thinking-dots">
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                    <span>
-                      {run?.status === "queued"
+                  <WorkingStatus
+                    label={
+                      run?.status === "queued"
                         ? t("One moment…", "Hetkinen…")
-                        : progressLabel(turn.events, t)}
-                    </span>
-                    {onStop && <button onClick={onStop}>{t("Stop", "Pysäytä")}</button>}
-                  </div>
+                        : progressLabel(turn.events, t)
+                    }
+                    stopLabel={t("Stop", "Pysäytä")}
+                    onStop={onStop}
+                  />
                 )}
                 {latest && run?.status === "awaiting_approval" && (
                   <p className="chat-decision-note">
