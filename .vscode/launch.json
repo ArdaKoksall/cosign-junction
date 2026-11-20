@@ -10,7 +10,7 @@
       "args": ["watch", "src/index.ts"],
       "env": { "PUBLIC_ORIGIN": "http://localhost:5173", "NGROK_TOKEN": "" },
       "outputCapture": "std",
-      "presentation": { "hidden": true }
+      "presentation": { "hidden": true}
     },
     {
       "name": "Cosign frontend",
